@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
@@ -151,7 +151,7 @@ export default function SpecialistsPage() {
         <div>
           {pendingPayouts.length > 0 && (
             <div style={{ background: 'var(--orL)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 12.5, color: 'var(--orange)' }}>⚠️ <strong>{pendingPayouts.length} payout requests</strong> pending approval — Total ₹{pendingAmount.toLocaleString('en-IN')}</span>
+              <span style={{ fontSize: 12.5, color: 'var(--orange)' }}>⚠️ <strong>{pendingPayouts.length} payout requests</strong> pending approval · Total ₹{pendingAmount.toLocaleString('en-IN')}</span>
             </div>
           )}
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -183,7 +183,7 @@ export default function SpecialistsPage() {
                               ✓ Approve
                             </button>
                             <button onClick={() => approvePayout(p._id, 'reject')} disabled={approvingId === p._id} style={{ padding: '5px 10px', background: 'var(--rdL)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 6, color: 'var(--red)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Outfit' }}>
-                              ✗
+                              ✕
                             </button>
                           </div>
                         )}
@@ -232,12 +232,12 @@ export default function SpecialistsPage() {
                       <span style={{ fontFamily: 'DM Mono', color: 'var(--gold)' }}>₹{s.stats.totalEarnings.toLocaleString('en-IN')}</span>
                     </div>
                     <div style={{ height: 8, background: 'var(--s2)', borderRadius: 4, overflow: 'hidden', display: 'flex' }}>
-                      <div style={{ height: '100%', width: Math.round(s.stats.consultationEarnings / maxEarn * 100) + '%', background: 'var(--teal)', title: 'Consultation' }} />
+                      <div style={{ height: '100%', width: Math.round(s.stats.consultationEarnings / maxEarn * 100) + '%', background: 'var(--teal)' }} />
                       <div style={{ height: '100%', width: Math.round(s.stats.commissionEarned / maxEarn * 100) + '%', background: 'var(--gold)' }} />
                     </div>
                     <div style={{ display: 'flex', gap: 10, marginTop: 3 }}>
-                      <span style={{ fontSize: 9.5, color: 'var(--teal)' }}>● Consultation ₹{s.stats.consultationEarnings}</span>
-                      <span style={{ fontSize: 9.5, color: 'var(--gold)' }}>● Commission ₹{s.stats.commissionEarned}</span>
+                      <span style={{ fontSize: 9.5, color: 'var(--teal)' }}>🟢 Consultation ₹{s.stats.consultationEarnings}</span>
+                      <span style={{ fontSize: 9.5, color: 'var(--gold)' }}>🟡 Commission ₹{s.stats.commissionEarned}</span>
                     </div>
                   </div>
                 )
@@ -419,7 +419,7 @@ export default function SpecialistsPage() {
                     {selected.phone && (
                       <div style={{ display: 'flex', gap: 8 }}>
                         <a href={'tel:' + selected.phone.replace(/[^0-9+]/g,'')} style={{ flex: 1, padding: 9, background: 'var(--blL)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, color: 'var(--blue)', fontWeight: 700, fontSize: 12.5, textDecoration: 'none', textAlign: 'center' }}>📞 Call</a>
-                        <a href={'https://wa.me/' + selected.phone.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi ' + selected.name + ', Rabt Naturals HQ se 🌿')} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: 9, background: 'var(--grL)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, color: 'var(--green)', fontWeight: 700, fontSize: 12.5, textDecoration: 'none', textAlign: 'center' }}>💬 WhatsApp</a>
+                        <a href={'https://wa.me/' + selected.phone.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi ' + selected.name + ', Rabt Naturals HQ se 👋')} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: 9, background: 'var(--grL)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, color: 'var(--green)', fontWeight: 700, fontSize: 12.5, textDecoration: 'none', textAlign: 'center' }}>💬 WhatsApp</a>
                       </div>
                     )}
                     <button onClick={() => setCreateLoginModal(selected)} style={{ width: '100%', padding: 10, background: 'linear-gradient(135deg,#D4A853,#B87C30)', border: 'none', borderRadius: 8, color: '#08090C', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'Outfit' }}>
@@ -481,4 +481,3 @@ export default function SpecialistsPage() {
     </div>
   )
 }
-

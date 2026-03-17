@@ -125,7 +125,7 @@ export default function GoalsPage() {
   const getAutoProgress = (g: Goal) => {
     if (g.category === 'Revenue') return totalRevenue
     if (g.category === 'Orders') return deliveredOrders.length
-    if (g.category === 'Customers') return [...new Set(orders.map(o => o.phone || o.userId))].length
+    if (g.category === 'Customers') return Array.from(new Set(orders.map(o => o.phone || o.userId))).length
     return g.current
   }
 
