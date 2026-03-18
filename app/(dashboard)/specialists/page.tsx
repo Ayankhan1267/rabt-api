@@ -28,7 +28,7 @@ export default function SpecialistsPage() {
     try {
       const { data: profilesData } = await supabase.from('profiles').select('*').eq('role', 'specialist')
       setHqProfiles(profilesData || [])
-      const url = localStorage.getItem('rabt_mongo_url')
+      const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
       if (!url) { setLoading(false); return }
       const [specRes, consRes, sessRes, payRes, ordRes] = await Promise.all([
         fetch(url + '/api/specialists').then(r => r.ok ? r.json() : []),
@@ -60,7 +60,7 @@ export default function SpecialistsPage() {
   }
 
   async function approvePayout(payoutId: string, action: 'approve'|'reject') {
-    const url = localStorage.getItem('rabt_mongo_url')
+    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
     if (!url) return
     setApprovingId(payoutId)
     try {

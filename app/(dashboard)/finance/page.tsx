@@ -67,7 +67,7 @@ export default function FinancePage() {
       const { data: prodData } = await supabase.from('product_lab').select('name,cost,price').order('name')
       setProducts(prodData || [])
 
-      const url = typeof window !== 'undefined' ? localStorage.getItem('rabt_mongo_url') : null
+      const url = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null
       if (url) {
         const [ordRes, consRes, payRes] = await Promise.all([
           fetch(url + '/api/orders').then(r => r.ok ? r.json() : []),

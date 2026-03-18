@@ -59,7 +59,7 @@ export default function ReportsPage() {
       if (data?.value) setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(data.value) })
     } catch {}
     // Load orders from MongoDB
-    const url = typeof window !== 'undefined' ? localStorage.getItem('rabt_mongo_url') : null
+    const url = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null
     if (url) {
       try {
         const res = await fetch(url + '/api/orders')

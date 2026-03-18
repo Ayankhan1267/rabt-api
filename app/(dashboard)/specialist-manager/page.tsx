@@ -36,7 +36,7 @@ export default function SpecialistManagerPage() {
     try {
       const { data: profilesData } = await supabase.from('profiles').select('*').eq('role', 'specialist')
       setHqProfiles(profilesData || [])
-      const url = localStorage.getItem('rabt_mongo_url')
+      const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
       if (!url) { setLoading(false); return }
       const [specRes, consRes, sessRes, payRes, ordRes] = await Promise.all([
         fetch(url + '/api/specialists').then(r => r.ok ? r.json() : []),
@@ -55,7 +55,7 @@ export default function SpecialistManagerPage() {
   }
 
   async function assignConsultation(consId: string, specId: string) {
-    const url = localStorage.getItem('rabt_mongo_url')
+    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
     if (!url) return
     try {
       const res = await fetch(url + '/api/consultations/' + consId, {
@@ -68,7 +68,7 @@ export default function SpecialistManagerPage() {
   }
 
   async function updatePayoutStatus(id: string, status: 'completed' | 'rejected') {
-    const url = localStorage.getItem('rabt_mongo_url')
+    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
     if (!url) return
     try {
       const res = await fetch(url + '/api/payouts/' + id, {

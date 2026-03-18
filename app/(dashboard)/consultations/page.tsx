@@ -38,7 +38,7 @@ export default function ConsultationsPage() {
       const { data: hq } = await supabase.from('profiles').select('*').in('role', ['specialist', 'specialist_manager'])
       setHqProfiles(hq || [])
 
-      const url = localStorage.getItem('rabt_mongo_url')
+      const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
       if (url) {
         const [consRes, specRes] = await Promise.all([
           fetch(url + '/api/consultations').then(r => r.ok ? r.json() : []),
@@ -52,7 +52,7 @@ export default function ConsultationsPage() {
   }
 
   async function assignSpecialist(consId: string, specId: string) {
-    const url = localStorage.getItem('rabt_mongo_url')
+    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
     if (!url) { toast.error('MongoDB not connected'); return }
     setAssigning(true)
     try {
@@ -77,7 +77,7 @@ export default function ConsultationsPage() {
   }
 
   async function updateStatus(consId: string, status: string) {
-    const url = localStorage.getItem('rabt_mongo_url')
+    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
     if (!url) return
     try {
       await fetch(url + '/api/consultations/' + consId, {

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase, ROLE_CONFIG, UserProfile } from '@/lib/supabase'
@@ -16,77 +16,77 @@ const NAV: NavSection[] = [
   {
     label: 'Command',
     items: [
-      { id: 'dashboard', label: 'Dashboard', icon: '⚡', href: '/dashboard', roles: ['founder', 'manager'] },
-      { id: 'specialist-dashboard', label: 'Specialist Panel', icon: '🌿', href: '/specialist-dashboard', roles: ['specialist'] },
-      { id: 'patients', label: 'My Patients', icon: '👥', href: '/patients', roles: ['specialist'] },
-      { id: 'specialist-manager', label: 'Specialist Manager', icon: '👩‍⚕️', href: '/specialist-manager', roles: ['specialist_manager', 'admin'] },
-      { id: 'admin', label: 'Admin Panel', icon: '🛡️', href: '/admin', roles: ['founder'] },
-      { id: 'kanban', label: 'Kanban', icon: '⬜', href: '/kanban', roles: ['founder', 'manager', 'ops', 'support', 'specialist_manager'] },
-      { id: 'calendar', label: 'Calendar', icon: '📅', href: '/calendar', roles: ['founder', 'manager', 'ops', 'support', 'specialist_manager'] },
+      { id: 'dashboard', label: 'Dashboard', icon: '?', href: '/dashboard', roles: ['founder', 'manager'] },
+      { id: 'specialist-dashboard', label: 'Specialist Panel', icon: '??', href: '/specialist-dashboard', roles: ['specialist'] },
+      { id: 'patients', label: 'My Patients', icon: '??', href: '/patients', roles: ['specialist'] },
+      { id: 'specialist-manager', label: 'Specialist Manager', icon: '?????', href: '/specialist-manager', roles: ['specialist_manager', 'admin'] },
+      { id: 'admin', label: 'Admin Panel', icon: '???', href: '/admin', roles: ['founder'] },
+      { id: 'kanban', label: 'Kanban', icon: '?', href: '/kanban', roles: ['founder', 'manager', 'ops', 'support', 'specialist_manager'] },
+      { id: 'calendar', label: 'Calendar', icon: '??', href: '/calendar', roles: ['founder', 'manager', 'ops', 'support', 'specialist_manager'] },
     ]
   },
   {
     label: 'Partner',
     roles: ['partner'],
     items: [
-      { id: 'partner', label: 'Partner Portal', icon: '🌿', href: '/partner', roles: ['partner'] },
+      { id: 'partner', label: 'Partner Portal', icon: '??', href: '/partner', roles: ['partner'] },
     ]
   },
   {
     label: 'Sales',
     items: [
-      { id: 'crm', label: 'CRM / Leads', icon: '👥', href: '/crm', roles: ['founder', 'manager', 'specialist_manager', 'specialist', 'support'] },
-      { id: 'orders', label: 'Orders', icon: '📦', href: '/orders', roles: ['founder', 'manager', 'ops', 'support'] },
-      { id: 'inventory', label: 'Inventory', icon: '🗄️', href: '/inventory', roles: ['founder', 'manager', 'ops'] },
+      { id: 'crm', label: 'CRM / Leads', icon: '??', href: '/crm', roles: ['founder', 'manager', 'specialist_manager', 'specialist', 'support'] },
+      { id: 'orders', label: 'Orders', icon: '??', href: '/orders', roles: ['founder', 'manager', 'ops', 'support'] },
+      { id: 'inventory', label: 'Inventory', icon: '???', href: '/inventory', roles: ['founder', 'manager', 'ops'] },
     ]
   },
   {
     label: 'Specialist',
     roles: ['founder', 'specialist_manager', 'specialist'],
     items: [
-      { id: 'consultations', label: 'Consultations', icon: '🧴', href: '/consultations', roles: ['admin', 'specialist_manager'] },
-      { id: 'skinprofiles', label: 'Skin Profiles', icon: '🌿', href: '/skinprofiles' },
-      { id: 'specialists', label: 'Specialists', icon: '👩‍⚕️', href: '/specialists', roles: ['founder', 'specialist_manager'] },
+      { id: 'consultations', label: 'Consultations', icon: '??', href: '/consultations', roles: ['admin', 'specialist_manager'] },
+      { id: 'skinprofiles', label: 'Skin Profiles', icon: '??', href: '/skinprofiles' },
+      { id: 'specialists', label: 'Specialists', icon: '?????', href: '/specialists', roles: ['founder', 'specialist_manager'] },
     ]
   },
   {
     label: 'Support',
     roles: ['founder', 'manager', 'support', 'ops', 'specialist_manager'],
     items: [
-      { id: 'support', label: 'Support Chat', icon: '💬', href: '/support', badge: '5', badgeColor: 'var(--red)', roles: ['founder', 'manager', 'support', 'ops', 'specialist_manager'] },
-      { id: 'reminders', label: 'Reminders & Follow-up', icon: '📲', href: '/reminders', roles: ['founder', 'manager', 'support', 'ops', 'specialist_manager'] },
+      { id: 'support', label: 'Support Chat', icon: '??', href: '/support', badge: '5', badgeColor: 'var(--red)', roles: ['founder', 'manager', 'support', 'ops', 'specialist_manager'] },
+      { id: 'reminders', label: 'Reminders & Follow-up', icon: '??', href: '/reminders', roles: ['founder', 'manager', 'support', 'ops', 'specialist_manager'] },
     ]
   },
   {
     label: 'Marketing',
     roles: ['founder', 'manager'],
     items: [
-      { id: 'marketing', label: 'Marketing', icon: '📢', href: '/marketing' },
-      { id: 'content', label: 'Content Studio', icon: '🎬', href: '/content' },
-      { id: 'ads', label: 'Ads Manager', icon: '📊', href: '/ads' },
-      { id: 'website', label: 'Website Analytics', icon: '🌐', href: '/website' },
-      { id: 'partner-portal', label: 'Partner Portal', icon: '🌿', href: '/partner' },
-      { id: 'partner-manager', label: 'Partner Manager', icon: '🤝', href: '/partner-manager' },
+      { id: 'marketing', label: 'Marketing', icon: '??', href: '/marketing' },
+      { id: 'content', label: 'Content Studio', icon: '??', href: '/content' },
+      { id: 'ads', label: 'Ads Manager', icon: '??', href: '/ads' },
+      { id: 'website', label: 'Website Analytics', icon: '??', href: '/website' },
+      { id: 'partner-portal', label: 'Partner Portal', icon: '??', href: '/partner' },
+      { id: 'partner-manager', label: 'Partner Manager', icon: '??', href: '/partner-manager' },
     ]
   },
   {
     label: 'Business',
     roles: ['founder', 'manager'],
     items: [
-      { id: 'finance', label: 'Finance', icon: '💰', href: '/finance' },
-      { id: 'productlab', label: 'Product Lab', icon: '🧪', href: '/productlab' },
-      { id: 'goals', label: 'Goals & OKR', icon: '🎯', href: '/goals' },
-      { id: 'reports', label: 'Reports', icon: '📋', href: '/reports' },
-      { id: 'team', label: 'Team', icon: '🤝', href: '/team' },
+      { id: 'finance', label: 'Finance', icon: '??', href: '/finance' },
+      { id: 'productlab', label: 'Product Lab', icon: '??', href: '/productlab' },
+      { id: 'goals', label: 'Goals & OKR', icon: '??', href: '/goals' },
+      { id: 'reports', label: 'Reports', icon: '??', href: '/reports' },
+      { id: 'team', label: 'Team', icon: '??', href: '/team' },
     ]
   },
   {
     label: 'AI System',
     roles: ['founder', 'manager', 'ops', 'specialist_manager'],
     items: [
-      { id: 'automation', label: 'Automation', icon: '⚙️', href: '/automation', roles: ['founder', 'manager'] },
-      { id: 'aiagents', label: 'AI Agents', icon: '🤖', href: '/aiagents', badge: 'Live', badgeColor: 'var(--green)', roles: ['founder', 'manager', 'ops', 'specialist_manager'] },
-      { id: 'knowledge', label: 'Knowledge Base', icon: '📚', href: '/knowledge', roles: ['founder', 'manager', 'ops', 'specialist_manager'] },
+      { id: 'automation', label: 'Automation', icon: '??', href: '/automation', roles: ['founder', 'manager'] },
+      { id: 'aiagents', label: 'AI Agents', icon: '??', href: '/aiagents', badge: 'Live', badgeColor: 'var(--green)', roles: ['founder', 'manager', 'ops', 'specialist_manager'] },
+      { id: 'knowledge', label: 'Knowledge Base', icon: '??', href: '/knowledge', roles: ['founder', 'manager', 'ops', 'specialist_manager'] },
     ]
   },
 ]
@@ -153,7 +153,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (notif.type === 'consultation') playNotificationSound()
         setNotifications(prev => [notif, ...prev])
         setUnreadCount(prev => prev + 1)
-        toast(notif.title, { icon: notif.type === 'consultation' ? '🌿' : notif.type === 'order' ? '📦' : '🔔' })
+        toast(notif.title, { icon: notif.type === 'consultation' ? '??' : notif.type === 'order' ? '??' : '??' })
       }).subscribe()
   }
 
@@ -196,7 +196,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
   const currentTitle = NAV.flatMap(s => s.items).find(i => isActive(i.href))?.label || 'Dashboard'
 
-  // ── Sidebar Content (shared between desktop + mobile) ──
+  // -- Sidebar Content (shared between desktop + mobile) --
   const SidebarContent = () => (
     <>
       {/* Brand */}
@@ -211,11 +211,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 15, fontWeight: 900, color: '#0097A7', letterSpacing: '-0.3px' }}>rabt </span>
               <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--tx)' }}>NATURALS</span>
             </div>
-            <div style={{ fontSize: 9, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>HQ · AI Business OS</div>
+            <div style={{ fontSize: 9, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>HQ � AI Business OS</div>
           </div>
           {/* Close button on mobile */}
           {isMobile && (
-            <button onClick={() => setSidebarOpen(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: 20, padding: 4 }}>✕</button>
+            <button onClick={() => setSidebarOpen(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: 20, padding: 4 }}>?</button>
           )}
         </div>
         {roleConfig && (
@@ -267,7 +267,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)' }} />
         </div>
-        <button onClick={logout} style={{ width: '100%', marginTop: 9, padding: '6px', background: 'rgba(0,151,167,0.08)', border: '1px solid rgba(0,151,167,0.2)', borderRadius: 8, color: '#0097A7', fontSize: 11, cursor: 'pointer', fontFamily: 'Outfit', fontWeight: 600 }}>↩ Sign Out</button>
+        <button onClick={logout} style={{ width: '100%', marginTop: 9, padding: '6px', background: 'rgba(0,151,167,0.08)', border: '1px solid rgba(0,151,167,0.2)', borderRadius: 8, color: '#0097A7', fontSize: 11, cursor: 'pointer', fontFamily: 'Outfit', fontWeight: 600 }}>? Sign Out</button>
       </div>
     </>
   )
@@ -275,14 +275,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
 
-      {/* ── DESKTOP SIDEBAR ── */}
+      {/* -- DESKTOP SIDEBAR -- */}
       {!isMobile && (
         <aside style={{ width: '240px', background: 'var(--s1)', borderRight: '1px solid var(--b1)', height: '100vh', position: 'fixed', top: 0, left: 0, display: 'flex', flexDirection: 'column', overflowY: 'auto', zIndex: 200, scrollbarWidth: 'none' }}>
           <SidebarContent />
         </aside>
       )}
 
-      {/* ── MOBILE SIDEBAR OVERLAY ── */}
+      {/* -- MOBILE SIDEBAR OVERLAY -- */}
       {isMobile && sidebarOpen && (
         <>
           {/* Backdrop */}
@@ -294,7 +294,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </>
       )}
 
-      {/* ── MAIN ── */}
+      {/* -- MAIN -- */}
       <main style={{ marginLeft: isMobile ? 0 : 240, flex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
         {/* Topbar */}
@@ -322,13 +322,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
             {/* Notification Bell */}
             <div style={{ position: 'relative' }}>
-              <button onClick={() => { setShowNotif(!showNotif); if (!showNotif && unreadCount > 0) markAllRead() }} style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(0,151,167,0.08)', border: '1px solid rgba(0,151,167,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>🔔</button>
+              <button onClick={() => { setShowNotif(!showNotif); if (!showNotif && unreadCount > 0) markAllRead() }} style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(0,151,167,0.08)', border: '1px solid rgba(0,151,167,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>??</button>
               {unreadCount > 0 && (
                 <span style={{ position: 'absolute', top: 3, right: 3, width: 14, height: 14, borderRadius: '50%', background: 'var(--red)', border: '2px solid var(--bg)', fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
               )}
             </div>
 
-            {/* Date — hide on small mobile */}
+            {/* Date � hide on small mobile */}
             {!isMobile && (
               <div style={{ fontSize: 11, color: 'var(--mu)', fontFamily: 'DM Mono', padding: '5px 10px', background: 'rgba(0,151,167,0.06)', border: '1px solid rgba(0,151,167,0.15)', borderRadius: 6 }}>
                 {new Date().toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -342,12 +342,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div style={{ position: 'fixed', top: 52, right: 0, width: isMobile ? '100vw' : 320, height: 'calc(100vh - 52px)', background: 'var(--s1)', borderLeft: '1px solid var(--b2)', zIndex: 500, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--b1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontFamily: 'Syne', fontSize: 14, fontWeight: 800 }}>Notifications</span>
-              <button onClick={() => setShowNotif(false)} style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: 14 }}>✕</button>
+              <button onClick={() => setShowNotif(false)} style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: 14 }}>?</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
               {notifications.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--mu)' }}>
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>🔔</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>??</div>
                   <div style={{ fontSize: 13 }}>No notifications yet</div>
                 </div>
               ) : notifications.map(n => (
@@ -366,7 +366,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </div>
 
-        {/* ── MOBILE BOTTOM NAV ── */}
+        {/* -- MOBILE BOTTOM NAV -- */}
         {isMobile && (
           <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 64, background: 'var(--s1)', borderTop: '1px solid var(--b1)', display: 'flex', alignItems: 'center', justifyContent: 'space-around', zIndex: 200, paddingBottom: 8 }}>
             {/* Show top 4 relevant nav items */}
@@ -381,7 +381,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             })}
             {/* Menu button */}
             <button onClick={() => setSidebarOpen(true)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px', minWidth: 56 }}>
-              <span style={{ fontSize: 20 }}>☰</span>
+              <span style={{ fontSize: 20 }}>?</span>
               <span style={{ fontSize: 9, color: 'var(--mu)', fontWeight: 400 }}>More</span>
             </button>
           </div>

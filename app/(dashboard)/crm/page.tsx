@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
@@ -13,14 +13,14 @@ const STAGES = [
   { id: 'consultation_rescheduled', label: 'Rescheduled', color: 'var(--purple)', bg: 'rgba(139,92,246,0.15)' },
   { id: 'consultation_completed', label: 'Consultation Done', color: 'var(--teal)', bg: 'rgba(20,184,166,0.15)' },
   { id: 'routine_purchased', label: 'Routine Purchased', color: 'var(--green)', bg: 'var(--grL)' },
-  { id: 'converted', label: 'Converted ✅', color: 'var(--green)', bg: 'var(--grL)' },
+  { id: 'converted', label: 'Converted ?', color: 'var(--green)', bg: 'var(--grL)' },
   { id: 'consultation_cancelled', label: 'Cancelled', color: 'var(--red)', bg: 'var(--rdL)' },
   { id: 'lost', label: 'Lost', color: 'var(--red)', bg: 'var(--rdL)' },
 ]
 
 const SOURCES = ['WhatsApp', 'Instagram DM', 'Meta Ad', 'Google Ad', 'Website', 'Manual', 'Referral', 'Offline']
 
-// Map MongoDB consultation status → CRM stage
+// Map MongoDB consultation status ? CRM stage
 function consStatusToStage(status: string): string {
   const map: Record<string, string> = {
     pending: 'consultation_pending',
@@ -60,7 +60,7 @@ export default function CRMPage() {
 
   useEffect(() => {
     setMounted(true)
-    setMongoUrl(localStorage.getItem('rabt_mongo_url') || '')
+    setMongoUrl(process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') || '')
     loadAll()
   }, [])
 
@@ -80,7 +80,7 @@ export default function CRMPage() {
     setProfiles(pr.data || [])
 
     // Get mongo specialist for role-based filter
-    const url = localStorage.getItem('rabt_mongo_url')
+    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
     if (url && p.data?.role === 'specialist') {
       try {
         const specRes = await fetch(url + '/api/specialists').then(r => r.ok ? r.json() : [])
@@ -107,7 +107,7 @@ export default function CRMPage() {
   }
 
   async function autoSync() {
-    const url = localStorage.getItem('rabt_mongo_url')
+    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
     if (!url) { toast.error('MongoDB connect nahi hai'); return }
     setSyncing(true)
     toast.loading('MongoDB se sync ho raha hai...', { id: 'sync' })
@@ -163,7 +163,7 @@ export default function CRMPage() {
         )
 
         if (exists) {
-          // Only upgrade stage — never downgrade to lower stage
+          // Only upgrade stage � never downgrade to lower stage
           const stageOrder = STAGES.map(s => s.id)
           const currentIdx = stageOrder.indexOf(exists.stage)
           const newIdx = stageOrder.indexOf(newStage)
@@ -226,7 +226,7 @@ export default function CRMPage() {
         added++
       }
 
-      toast.success(added + ' new · ' + autoAssigned + ' auto-assigned · ' + updated + ' updated', { id: 'sync', duration: 8000 })
+      toast.success(added + ' new � ' + autoAssigned + ' auto-assigned � ' + updated + ' updated', { id: 'sync', duration: 8000 })
       loadLeads()
     } catch (err: any) {
       toast.error('Error: ' + err.message, { id: 'sync' })
@@ -272,7 +272,7 @@ export default function CRMPage() {
   }
 
   function sendWhatsApp(phone: string, name: string) {
-    window.open('https://wa.me/' + phone.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Hi ' + name + '! Rabt Naturals se 🌿'), '_blank')
+    window.open('https://wa.me/' + phone.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Hi ' + name + '! Rabt Naturals se ??'), '_blank')
   }
 
   const isAdmin = profile && ['founder', 'manager', 'specialist_manager', 'ops', 'admin'].includes(profile.role)
@@ -305,14 +305,14 @@ export default function CRMPage() {
         <div>
           <h1 style={{ fontFamily: 'Syne', fontSize: 22, fontWeight: 800 }}>CRM / <span style={{ color: 'var(--gold)' }}>Leads</span></h1>
           <p style={{ color: 'var(--mu)', fontSize: 12.5, marginTop: 4 }}>
-            {leads.length} total{unassigned.length > 0 && isAdmin && <span style={{ color: 'var(--orange)' }}> · {unassigned.length} unassigned</span>}
-            <span style={{ color: 'var(--green)' }}> · Live</span>
+            {leads.length} total{unassigned.length > 0 && isAdmin && <span style={{ color: 'var(--orange)' }}> � {unassigned.length} unassigned</span>}
+            <span style={{ color: 'var(--green)' }}> � Live</span>
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {isAdmin && (
             <button onClick={() => setShowImport(true)} style={{ padding: '8px 14px', background: 'var(--grL)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, color: 'var(--green)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', fontFamily: 'Outfit' }}>
-              📥 Import CSV
+              ?? Import CSV
             </button>
           )}
           {isAdmin && (
@@ -345,7 +345,7 @@ export default function CRMPage() {
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, phone..." style={{ ...inp, marginBottom: 0, flex: 1 }} />
-        {[{ id: 'pipeline', label: 'Pipeline' }, { id: 'table', label: 'Table' }, { id: 'analytics', label: '📊 Analytics' }, ...(isAdmin ? [{ id: 'unassigned', label: 'Unassigned (' + unassigned.length + ')' }] : [])].map(t => (
+        {[{ id: 'pipeline', label: 'Pipeline' }, { id: 'table', label: 'Table' }, { id: 'analytics', label: '?? Analytics' }, ...(isAdmin ? [{ id: 'unassigned', label: 'Unassigned (' + unassigned.length + ')' }] : [])].map(t => (
           <button key={t.id} onClick={() => setView(t.id as any)} style={{ padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Outfit', whiteSpace: 'nowrap', background: view === t.id ? 'var(--gL)' : 'rgba(255,255,255,0.05)', color: view === t.id ? 'var(--gold)' : 'var(--mu2)', border: '1px solid ' + (view === t.id ? 'rgba(212,168,83,0.3)' : 'var(--b1)') }}>
             {t.label}
           </button>
@@ -375,7 +375,7 @@ export default function CRMPage() {
                       {isAdmin && (
                         <select value={lead.assigned_to?.id || ''} onChange={e => { const p = profiles.find(pr => pr.id === e.target.value); assignLead(lead.id, e.target.value, p?.name || '') }}
                           style={{ width: '100%', background: lead.assigned_to ? 'rgba(34,197,94,0.1)' : 'rgba(249,115,22,0.1)', border: '1px solid ' + (lead.assigned_to ? 'rgba(34,197,94,0.3)' : 'rgba(249,115,22,0.3)'), borderRadius: 6, padding: '5px 8px', color: lead.assigned_to ? 'var(--green)' : 'var(--orange)', fontSize: 11, fontFamily: 'Outfit', outline: 'none', cursor: 'pointer', marginBottom: 8 }}>
-                          <option value="">{lead.assigned_to ? '— Change —' : '⚠️ Assign karo'}</option>
+                          <option value="">{lead.assigned_to ? '� Change �' : '?? Assign karo'}</option>
                           <optgroup label="Specialists">{profiles.filter(p => p.role === 'specialist').map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</optgroup>
                           <optgroup label="Team">{profiles.filter(p => p.role !== 'specialist').map(p => <option key={p.id} value={p.id}>{p.name} ({p.role})</option>)}</optgroup>
                         </select>
@@ -384,7 +384,7 @@ export default function CRMPage() {
                       <div style={{ display: 'flex', gap: 5 }}>
                         {lead.phone && <button onClick={() => sendWhatsApp(lead.phone, lead.name)} style={{ flex: 1, padding: '5px', background: 'var(--grL)', border: 'none', borderRadius: 6, color: 'var(--green)', fontSize: 11, cursor: 'pointer' }}>WA</button>}
                         {isAdmin && stage.id !== 'converted' && stage.id !== 'lost' && stage.id !== 'consultation_cancelled' && (
-                          <button onClick={() => { const order = STAGES.map(s => s.id); const i = order.indexOf(stage.id); if(i < order.length-3) updateStage(lead.id, order[i+1]) }} style={{ flex: 1, padding: '5px', background: 'linear-gradient(135deg,#D4A853,#B87C30)', border: 'none', borderRadius: 6, color: '#08090C', fontSize: 11, cursor: 'pointer', fontWeight: 700 }}>Next →</button>
+                          <button onClick={() => { const order = STAGES.map(s => s.id); const i = order.indexOf(stage.id); if(i < order.length-3) updateStage(lead.id, order[i+1]) }} style={{ flex: 1, padding: '5px', background: 'linear-gradient(135deg,#D4A853,#B87C30)', border: 'none', borderRadius: 6, color: '#08090C', fontSize: 11, cursor: 'pointer', fontWeight: 700 }}>Next ?</button>
                         )}
                         {isAdmin && <button onClick={() => deleteLead(lead.id)} style={{ padding: '5px 7px', background: 'var(--rdL)', border: 'none', borderRadius: 6, color: 'var(--red)', fontSize: 11, cursor: 'pointer' }}>X</button>}
                       </div>
@@ -412,8 +412,8 @@ export default function CRMPage() {
                 return (
                   <tr key={i} onMouseOver={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.018)')} onMouseOut={e => (e.currentTarget.style.background = '')}>
                     <td style={{ padding: '10px 12px', fontWeight: 500, fontSize: 12.5 }}>{l.name}</td>
-                    <td style={{ padding: '10px 12px', fontFamily: 'DM Mono', fontSize: 12 }}>{l.phone || '—'}</td>
-                    <td style={{ padding: '10px 12px', fontSize: 12, color: 'var(--mu2)', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.concern || '—'}</td>
+                    <td style={{ padding: '10px 12px', fontFamily: 'DM Mono', fontSize: 12 }}>{l.phone || '�'}</td>
+                    <td style={{ padding: '10px 12px', fontSize: 12, color: 'var(--mu2)', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.concern || '�'}</td>
                     <td style={{ padding: '10px 12px' }}><span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, fontWeight: 700, background: l.source === 'Website' ? 'var(--grL)' : l.source === 'Offline' ? 'var(--orL)' : 'var(--blL)', color: l.source === 'Website' ? 'var(--green)' : l.source === 'Offline' ? 'var(--orange)' : 'var(--blue)' }}>{l.source}</span></td>
                     <td style={{ padding: '10px 12px' }}>
                       {isAdmin ? (
@@ -427,7 +427,7 @@ export default function CRMPage() {
                     <td style={{ padding: '10px 12px' }}>
                       {isAdmin ? (
                         <select value={l.assigned_to?.id || ''} onChange={e => { const p = profiles.find(pr => pr.id === e.target.value); assignLead(l.id, e.target.value, p?.name || '') }} style={{ background: l.assigned_to ? 'rgba(34,197,94,0.1)' : 'rgba(249,115,22,0.1)', border: '1px solid ' + (l.assigned_to ? 'rgba(34,197,94,0.3)' : 'rgba(249,115,22,0.3)'), borderRadius: 6, padding: '4px 8px', color: l.assigned_to ? 'var(--green)' : 'var(--orange)', fontSize: 11, cursor: 'pointer', outline: 'none', fontFamily: 'Outfit', maxWidth: 140 }}>
-                          <option value="">{l.assigned_to ? '— Change —' : '⚠️ Assign'}</option>
+                          <option value="">{l.assigned_to ? '� Change �' : '?? Assign'}</option>
                           {profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
                       ) : (
@@ -571,7 +571,7 @@ export default function CRMPage() {
       {view === 'unassigned' && isAdmin && (
         <div>
           {unassigned.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: 'var(--mu)' }}>✅ Sab leads assigned hain!</div>
+            <div style={{ textAlign: 'center', padding: '60px', color: 'var(--mu)' }}>? Sab leads assigned hain!</div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12 }}>
               {unassigned.map((lead, i) => (
@@ -606,15 +606,15 @@ export default function CRMPage() {
           <div style={{ background: 'var(--s1)', border: '1px solid var(--b2)', borderRadius: 16, padding: '26px 30px', width: 500, maxWidth: '94vw', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
               <div style={{ fontFamily: 'Syne', fontSize: 17, fontWeight: 800 }}>{selectedLead.name}</div>
-              <button onClick={() => setSelectedLead(null)} style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: 18 }}>✕</button>
+              <button onClick={() => setSelectedLead(null)} style={{ background: 'none', border: 'none', color: 'var(--mu)', cursor: 'pointer', fontSize: 18 }}>?</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
               {[
-                { label: 'Phone', value: selectedLead.phone || '—' },
-                { label: 'Email', value: selectedLead.email || '—' },
+                { label: 'Phone', value: selectedLead.phone || '�' },
+                { label: 'Email', value: selectedLead.email || '�' },
                 { label: 'Source', value: selectedLead.source },
                 { label: 'Stage', value: STAGES.find(s => s.id === selectedLead.stage)?.label || selectedLead.stage },
-                { label: 'Concern', value: selectedLead.concern || '—' },
+                { label: 'Concern', value: selectedLead.concern || '�' },
                 { label: 'Assigned', value: selectedLead.assigned_to?.name || 'Unassigned' },
               ].map((item, i) => (
                 <div key={i} style={{ background: 'var(--s2)', borderRadius: 8, padding: '10px 12px' }}>
@@ -628,7 +628,7 @@ export default function CRMPage() {
                 <div style={{ marginBottom: 14 }}>
                   <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu2)', textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Assign To</label>
                   <select value={selectedLead.assigned_to?.id || ''} onChange={e => { const p = profiles.find(pr => pr.id === e.target.value); assignLead(selectedLead.id, e.target.value, p?.name || ''); setSelectedLead({...selectedLead, assigned_to: p || null}) }} style={{ width: '100%', background: 'var(--s2)', border: '1px solid var(--b2)', borderRadius: 8, padding: '9px 12px', color: 'var(--tx)', fontSize: 13, fontFamily: 'Outfit', outline: 'none', cursor: 'pointer' }}>
-                    <option value="">— Unassigned —</option>
+                    <option value="">� Unassigned �</option>
                     <optgroup label="Specialists">{profiles.filter(p => p.role === 'specialist').map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</optgroup>
                     <optgroup label="Team">{profiles.filter(p => p.role !== 'specialist').map(p => <option key={p.id} value={p.id}>{p.name} ({p.role})</option>)}</optgroup>
                   </select>
@@ -647,8 +647,8 @@ export default function CRMPage() {
             )}
             {selectedLead.notes && <div style={{ background: 'var(--s2)', borderRadius: 8, padding: '10px 12px', marginBottom: 14, fontSize: 12, color: 'var(--mu2)' }}>{selectedLead.notes}</div>}
             <div style={{ display: 'flex', gap: 8 }}>
-              {selectedLead.phone && <button onClick={() => sendWhatsApp(selectedLead.phone, selectedLead.name)} style={{ flex: 1, padding: 10, background: 'var(--grL)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, color: 'var(--green)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Outfit' }}>💬 WhatsApp</button>}
-              {selectedLead.phone && <a href={'tel:' + selectedLead.phone.replace(/[^0-9+]/g,'')} style={{ flex: 1, padding: 10, background: 'var(--blL)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, color: 'var(--blue)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Outfit', textDecoration: 'none', textAlign: 'center' }}>📞 Call</a>}
+              {selectedLead.phone && <button onClick={() => sendWhatsApp(selectedLead.phone, selectedLead.name)} style={{ flex: 1, padding: 10, background: 'var(--grL)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, color: 'var(--green)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Outfit' }}>?? WhatsApp</button>}
+              {selectedLead.phone && <a href={'tel:' + selectedLead.phone.replace(/[^0-9+]/g,'')} style={{ flex: 1, padding: 10, background: 'var(--blL)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, color: 'var(--blue)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Outfit', textDecoration: 'none', textAlign: 'center' }}>?? Call</a>}
             </div>
           </div>
         </div>
@@ -750,7 +750,7 @@ export default function CRMPage() {
                 setImporting(false)
                 loadLeads()
               }} style={{ flex: 2, padding: 10, background: importing || !importData ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,#D4A853,#B87C30)', border: 'none', borderRadius: 8, color: importing || !importData ? 'var(--mu)' : '#08090C', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', fontFamily: 'Outfit' }}>
-                {importing ? 'Importing...' : '📥 Import Leads'}
+                {importing ? 'Importing...' : '?? Import Leads'}
               </button>
             </div>
           </div>

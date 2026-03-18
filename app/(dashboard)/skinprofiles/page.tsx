@@ -29,7 +29,7 @@ export default function SkinProfilePage() {
     const { data: hq } = await supabase.from('profiles').select('*').eq('role', 'specialist')
     setMyProfile(prof)
     setHqProfiles(hq || [])
-    const url = localStorage.getItem('rabt_mongo_url')
+    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
     if (!url) { setLoading(false); return }
     try {
       const [spRes, consRes, custRes, prodRes, specRes] = await Promise.all([
