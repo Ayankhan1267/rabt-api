@@ -35,6 +35,7 @@ export default function PartnerPortalPage() {
   const [products, setProducts]           = useState<Product[]>([])
   const [coupons, setCoupons]             = useState<Coupon[]>([])
   const [productsLoading, setProductsLoading] = useState(false)
+  const [showProductDrawer, setShowProductDrawer] = useState(false)
   const [couponCode, setCouponCode]       = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon|null>(null)
   const [couponError, setCouponError]     = useState('')
@@ -720,7 +721,7 @@ export default function PartnerPortalPage() {
           {/* STEP 2 RESULTS */}
           {step === 2 && aiAnalysis && (
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: typeof window !== 'undefined' && window.innerWidth < 768 ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
                 <div className="card">
                   <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 14 }}>
                     {photoPreview && <img src={photoPreview} alt="Customer" style={{ width: 80, height: 80, borderRadius: 12, objectFit: 'cover', border: '2px solid var(--teal)', flexShrink: 0 }} />}
@@ -752,7 +753,7 @@ export default function PartnerPortalPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: typeof window !== 'undefined' && window.innerWidth < 768 ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
                 {[{title:'🌅 Morning Routine',routine:aiAnalysis.amRoutine},{title:'🌙 Night Routine',routine:aiAnalysis.pmRoutine}].map(({title,routine},i)=>(
                   <div key={i} className="card">
                     <div style={{ fontFamily: 'Syne', fontSize: 13, fontWeight: 800, marginBottom: 12 }}>{title}</div>
