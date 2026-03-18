@@ -1,4 +1,4 @@
-'use client'
+ï»¿'use client'
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase, ROLE_CONFIG, UserProfile } from '@/lib/supabase'
@@ -211,7 +211,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 15, fontWeight: 900, color: '#0097A7', letterSpacing: '-0.3px' }}>rabt </span>
               <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--tx)' }}>NATURALS</span>
             </div>
-            <div style={{ fontSize: 9, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>HQ · AI Business OS</div>
+            <div style={{ fontSize: 9, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>HQ ï¿½ AI Business OS</div>
           </div>
           {/* Close button on mobile */}
           {isMobile && (
@@ -328,7 +328,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               )}
             </div>
 
-            {/* Date — hide on small mobile */}
+            {/* Date ï¿½ hide on small mobile */}
             {!isMobile && (
               <div style={{ fontSize: 11, color: 'var(--mu)', fontFamily: 'DM Mono', padding: '5px 10px', background: 'rgba(0,151,167,0.06)', border: '1px solid rgba(0,151,167,0.15)', borderRadius: 6 }}>
                 {new Date().toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}

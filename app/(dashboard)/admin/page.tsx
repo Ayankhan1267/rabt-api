@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { supabase, ROLE_CONFIG, UserRole } from '@/lib/supabase'
 import toast from 'react-hot-toast'

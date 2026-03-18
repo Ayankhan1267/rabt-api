@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState, useRef } from 'react'
 import toast from 'react-hot-toast'
 
@@ -54,7 +54,7 @@ export default function WebsiteAnalyticsPage() {
   }, [])
 
   async function fetchLive() {
-    const url = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null
+    const url = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null
     if (!url) return
     try {
       setLiveLoading(true)
@@ -70,7 +70,7 @@ export default function WebsiteAnalyticsPage() {
 
   async function loadAll(range = dateRange) {
     setLoading(true)
-    const url = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null
+    const url = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null
     const startDate = DATE_RANGES.find(d => d.value === range)?.start || '30daysAgo'
     try {
       if (url) {

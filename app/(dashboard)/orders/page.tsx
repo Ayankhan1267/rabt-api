@@ -1,4 +1,4 @@
-'use client'
+ï»¿'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
@@ -59,7 +59,7 @@ export default function OrdersPage() {
     try {
       const { data } = await supabase.from('hq_orders').select('*').order('created_at', { ascending: false })
       setOrders(data || [])
-      const url = process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
+      const url = process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
       if (url) {
         const res = await fetch(url + '/api/orders')
         if (res.ok) setMongoOrders(await res.json())
@@ -72,7 +72,7 @@ export default function OrdersPage() {
     setShowAddModal(true)
     setPosLoading(true)
     try {
-      const url = process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
+      const url = process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
       if (url) {
         const [prodRes, couponRes] = await Promise.all([
           fetch(url + '/api/products').then(r => r.ok ? r.json() : []),
@@ -156,7 +156,7 @@ export default function OrdersPage() {
       const totals = getCartTotal()
       const productNames = cart.map((i: any) => i.name).join(', ')
       let mongoId = ''
-      const url = process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
+      const url = process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
       if (url) {
         try {
           const mRes = await fetch(url + '/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customerName: form.customer_name, customerPhone: form.customer_phone, customerEmail: form.customer_email, address: form.address, city: form.city, state: form.state, pincode: form.pincode, products: productNames, items: cart.map((i: any) => ({ name: i.name, image: i.image || '', category: i.category || '', variant: i.variant || {}, qty: i.qty, price: i.price })), amount: totals.total, paymentMethod: form.payment_method, status: form.status, notes: form.notes, courier: form.courier, couponCode: couponApplied?.code || '', couponDiscount: totals.discount }) })
@@ -174,7 +174,7 @@ export default function OrdersPage() {
 
   async function cancelOrder(o: any) {
     if (!confirm('Order cancel karna chahte ho?')) return
-    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
+    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
     if (o._source === 'hq') {
       await supabase.from('hq_orders').update({ status: 'Cancelled' }).eq('id', o.id)
       if (url && o.mongo_id) { try { await fetch(url + '/api/orders/' + o.mongo_id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cancelled' }) }) } catch {} }
@@ -186,7 +186,7 @@ export default function OrdersPage() {
 
   async function updateStatus(id: string, status: string, mongoId?: string) {
     await supabase.from('hq_orders').update({ status }).eq('id', id)
-    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
+    const url = process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
     if (url && mongoId) { try { await fetch(url + '/api/orders/' + mongoId, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status.toLowerCase() }) }) } catch {} }
     toast.success('Updated!'); loadOrders()
   }
@@ -231,7 +231,7 @@ export default function OrdersPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontFamily: 'Syne', fontSize: 22, fontWeight: 800 }}>Order <span style={{ color: 'var(--gold)' }}>Management</span></h1>
-          <p style={{ color: 'var(--mu)', fontSize: 12.5, marginTop: 4 }}>{allOrders.length} total · {mongoOrders.length} website · {orders.length} HQ</p>
+          <p style={{ color: 'var(--mu)', fontSize: 12.5, marginTop: 4 }}>{allOrders.length} total ï¿½ {mongoOrders.length} website ï¿½ {orders.length} HQ</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setShowAnalytics(!showAnalytics)} style={{ padding: '8px 14px', background: showAnalytics ? 'var(--gL)' : 'rgba(255,255,255,0.05)', border: '1px solid ' + (showAnalytics ? 'rgba(212,168,83,0.3)' : 'var(--b1)'), borderRadius: 8, color: showAnalytics ? 'var(--gold)' : 'var(--mu)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', fontFamily: 'Outfit' }}>?? Analytics</button>
@@ -269,7 +269,7 @@ export default function OrdersPage() {
                 <div key={i} style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 }}>
                     <span style={{ fontWeight: 600 }}>{month}</span>
-                    <span style={{ fontFamily: 'DM Mono', fontWeight: 700, color: 'var(--gold)' }}>?{val.revenue.toLocaleString('en-IN')} · {val.count} orders</span>
+                    <span style={{ fontFamily: 'DM Mono', fontWeight: 700, color: 'var(--gold)' }}>?{val.revenue.toLocaleString('en-IN')} ï¿½ {val.count} orders</span>
                   </div>
                   <div style={{ height: 10, background: 'var(--s2)', borderRadius: 5, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: Math.round(val.revenue / maxMonthlyRev * 100) + '%', background: 'linear-gradient(90deg,#D4A853,#22C55E)', borderRadius: 5, transition: 'width 0.5s' }} />
@@ -312,7 +312,7 @@ export default function OrdersPage() {
                   <div key={i} style={{ marginBottom: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
                       <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{name}</span>
-                      <span style={{ fontFamily: 'DM Mono', color: 'var(--teal)' }}>{data.units} units · ?{Math.round(data.revenue).toLocaleString('en-IN')}</span>
+                      <span style={{ fontFamily: 'DM Mono', color: 'var(--teal)' }}>{data.units} units ï¿½ ?{Math.round(data.revenue).toLocaleString('en-IN')}</span>
                     </div>
                     <div style={{ height: 8, background: 'var(--s2)', borderRadius: 4, overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: Math.round(data.units / maxUnits * 100) + '%', background: 'var(--teal)', borderRadius: 4 }} />
@@ -368,7 +368,7 @@ export default function OrdersPage() {
 
       {failedCount > 0 && (
         <div style={{ background: 'var(--rdL)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '10px 16px', marginBottom: 12, fontSize: 12.5, color: 'var(--red)' }}>
-          {failedCount} orders mein payment fail — Razorpay se verify karo
+          {failedCount} orders mein payment fail ï¿½ Razorpay se verify karo
         </div>
       )}
 
@@ -421,7 +421,7 @@ export default function OrdersPage() {
                       <div style={{ fontSize: 11, color: 'var(--mu)' }}>{o.customerPhone || o.customer_phone || ''}</div>
                     </td>
                     <td style={{ padding: '11px 12px', fontSize: 12, color: 'var(--mu2)', maxWidth: 200 }}>
-                      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.products || o.product || o.items?.[0]?.name || '—'}{(o.itemCount > 1 || o.items?.length > 1) && <span style={{ color: 'var(--mu)', fontSize: 10 }}> +{(o.itemCount || o.items?.length) - 1}</span>}</div>
+                      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.products || o.product || o.items?.[0]?.name || 'ï¿½'}{(o.itemCount > 1 || o.items?.length > 1) && <span style={{ color: 'var(--mu)', fontSize: 10 }}> +{(o.itemCount || o.items?.length) - 1}</span>}</div>
                     </td>
                     <td style={{ padding: '11px 12px', fontFamily: 'DM Mono', fontWeight: 700, fontSize: 12.5, textDecoration: cancelled ? 'line-through' : 'none', color: cancelled ? 'var(--mu)' : 'var(--tx)' }}>Rs.{(o.amount || 0).toLocaleString('en-IN')}</td>
                     <td style={{ padding: '11px 12px' }}>
@@ -438,7 +438,7 @@ export default function OrdersPage() {
                       )}
                     </td>
                     <td style={{ padding: '11px 12px' }}><span style={{ fontSize: 10, color: o._source === 'website' ? 'var(--green)' : o._source === 'specialist' ? 'var(--purple)' : 'var(--mu)' }}>{o._source === 'website' ? 'Website' : o._source === 'specialist' ? 'Specialist' : 'HQ'}</span></td>
-                    <td style={{ padding: '11px 12px', fontSize: 11, color: 'var(--mu)', whiteSpace: 'nowrap' }}>{o.createdAt || o.created_at ? new Date(o.createdAt || o.created_at).toLocaleDateString('en-IN') : '—'}</td>
+                    <td style={{ padding: '11px 12px', fontSize: 11, color: 'var(--mu)', whiteSpace: 'nowrap' }}>{o.createdAt || o.created_at ? new Date(o.createdAt || o.created_at).toLocaleDateString('en-IN') : 'ï¿½'}</td>
                     <td style={{ padding: '11px 12px' }}>
                       <div style={{ display: 'flex', gap: 4 }}>
                         <button onClick={() => setShowDetail(o)} style={{ padding: '4px 10px', background: 'var(--gL)', border: 'none', borderRadius: 6, color: 'var(--gold)', fontSize: 10.5, cursor: 'pointer', fontFamily: 'Outfit' }}>View</button>
@@ -547,7 +547,7 @@ export default function OrdersPage() {
                   </div>
                 </div>
                 <button onClick={addOrder} disabled={cart.length === 0 || !form.customer_name} style={{ width: '100%', padding: '12px', background: cart.length > 0 && form.customer_name ? 'linear-gradient(135deg,#D4A853,#B87C30)' : 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 10, color: cart.length > 0 && form.customer_name ? '#08090C' : 'var(--mu)', fontWeight: 800, fontSize: 14, cursor: cart.length > 0 && form.customer_name ? 'pointer' : 'not-allowed', fontFamily: 'Syne' }}>
-                  {cart.length > 0 ? 'Create Order — Rs.' + totals.total : 'Cart mein product add karo'}
+                  {cart.length > 0 ? 'Create Order ï¿½ Rs.' + totals.total : 'Cart mein product add karo'}
                 </button>
               </div>
             </div>
@@ -568,15 +568,15 @@ export default function OrdersPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
               {[
                 { label: 'Customer', value: showDetail.customerName || showDetail.customer_name },
-                { label: 'Phone', value: showDetail.customerPhone || showDetail.customer_phone || '—' },
-                { label: 'Email', value: showDetail.customerEmail || showDetail.customer_email || '—' },
+                { label: 'Phone', value: showDetail.customerPhone || showDetail.customer_phone || 'ï¿½' },
+                { label: 'Email', value: showDetail.customerEmail || showDetail.customer_email || 'ï¿½' },
                 { label: 'Amount', value: 'Rs.' + (showDetail.amount || 0).toLocaleString('en-IN') },
                 { label: 'Payment', value: normalizePayment(showDetail) + (isPaymentFailed(showDetail) ? ' - Failed' : '') },
                 { label: 'Status', value: getStatusDisplay(showDetail) },
-                { label: 'City', value: showDetail.city || '—' },
-                { label: 'Pincode', value: showDetail.pincode || '—' },
-                { label: 'State', value: showDetail.state || '—' },
-                { label: 'Courier', value: showDetail.courier || '—' },
+                { label: 'City', value: showDetail.city || 'ï¿½' },
+                { label: 'Pincode', value: showDetail.pincode || 'ï¿½' },
+                { label: 'State', value: showDetail.state || 'ï¿½' },
+                { label: 'Courier', value: showDetail.courier || 'ï¿½' },
               ].map((item, i) => (
                 <div key={i} style={{ background: 'var(--s2)', borderRadius: 8, padding: '10px 12px' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 3 }}>{item.label}</div>
@@ -584,7 +584,7 @@ export default function OrdersPage() {
                 </div>
               ))}
             </div>
-            {showDetail.couponCode && <div style={{ background: 'var(--gL)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12 }}>Coupon: <strong>{showDetail.couponCode}</strong> — Discount: Rs.{showDetail.couponDiscount || 0}</div>}
+            {showDetail.couponCode && <div style={{ background: 'var(--gL)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12 }}>Coupon: <strong>{showDetail.couponCode}</strong> ï¿½ Discount: Rs.{showDetail.couponDiscount || 0}</div>}
             {showDetail.items?.length > 0 && (
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Products ({showDetail.items.length})</div>
@@ -593,7 +593,7 @@ export default function OrdersPage() {
                     {item.image && <img src={item.image} alt={item.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />}
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12.5, fontWeight: 500 }}>{item.name}</div>
-                      <div style={{ fontSize: 11, color: 'var(--mu)' }}>{item.size} · Qty: {item.quantity}</div>
+                      <div style={{ fontSize: 11, color: 'var(--mu)' }}>{item.size} ï¿½ Qty: {item.quantity}</div>
                     </div>
                     <div style={{ fontFamily: 'DM Mono', fontSize: 13, fontWeight: 700 }}>Rs.{item.price}</div>
                   </div>

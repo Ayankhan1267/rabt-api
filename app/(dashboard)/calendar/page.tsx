@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
@@ -49,7 +49,7 @@ export default function CalendarPage() {
       setEvents(ev.data || [])
       setKanbanTasks(kt.data || [])
 
-      const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
+      const url = process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
       if (url) {
         const consRes = await fetch(url + '/api/consultations').then(r => r.ok ? r.json() : [])
         setConsultations(Array.isArray(consRes) ? consRes.filter((c: any) => c.scheduledDate) : [])

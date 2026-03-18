@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import { supabase, ROLE_CONFIG, UserRole } from '@/lib/supabase'
 import toast from 'react-hot-toast'
@@ -39,7 +39,7 @@ export default function TeamPage() {
     setProfiles(profData || [])
 
     // Load MongoDB data for performance context
-    const url = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null
+    const url = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null
     if (url) {
       const [ordRes, conRes] = await Promise.allSettled([
         fetch(url + '/api/orders').then(r => r.ok ? r.json() : []),

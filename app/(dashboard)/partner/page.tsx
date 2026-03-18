@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
@@ -12,7 +12,7 @@ interface Coupon { _id: string; code: string; discount: number; discountType: st
 
 const getApiUrl = () =>
   process.env.NEXT_PUBLIC_MONGO_API_URL ||
-  (typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null) ||
+  (typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null) ||
   'https://rabt-api.onrender.com'
 
 export default function PartnerPortalPage() {
