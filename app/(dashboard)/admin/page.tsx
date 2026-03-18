@@ -84,19 +84,19 @@ export default function AdminPage() {
   }
 
   const PERMS: Record<string, Record<UserRole, boolean>> = {
-    'Dashboard':          { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
-    'Admin Panel':        { founder: true,  manager: false, specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
-    'CRM / Leads':        { founder: true,  manager: true,  specialist_manager: true,  specialist: true,  support: true,  ops: false, partner: false },
-    'Orders':             { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: true,  ops: true,  partner: false },
-    'Finance':            { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
-    'Marketing':          { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
-    'Consultations':      { founder: true,  manager: false, specialist_manager: true,  specialist: true,  support: false, ops: false, partner: false },
-    'AI Agents':          { founder: true,  manager: true,  specialist_manager: true,  specialist: true,  support: true,  ops: false, partner: false },
-    'Knowledge Base':     { founder: true,  manager: true,  specialist_manager: true,  specialist: true,  support: true,  ops: true,  partner: false },
-    'Team':               { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
-    'Goals':              { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
-    'Partner Portal':     { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: true  },
-    'Partner Manager':    { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
+    'Dashboard':       { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
+    'Admin Panel':     { founder: true,  manager: false, specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
+    'CRM / Leads':     { founder: true,  manager: true,  specialist_manager: true,  specialist: true,  support: true,  ops: false, partner: false },
+    'Orders':          { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: true,  ops: true,  partner: false },
+    'Finance':         { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
+    'Marketing':       { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
+    'Consultations':   { founder: true,  manager: false, specialist_manager: true,  specialist: true,  support: false, ops: false, partner: false },
+    'AI Agents':       { founder: true,  manager: true,  specialist_manager: true,  specialist: true,  support: true,  ops: false, partner: false },
+    'Knowledge Base':  { founder: true,  manager: true,  specialist_manager: true,  specialist: true,  support: true,  ops: true,  partner: false },
+    'Team':            { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
+    'Goals':           { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
+    'Partner Portal':  { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: true  },
+    'Partner Manager': { founder: true,  manager: true,  specialist_manager: false, specialist: false, support: false, ops: false, partner: false },
   }
 
   const inputStyle: any = {
@@ -116,7 +116,6 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* Tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, borderBottom: '1px solid var(--b1)', paddingBottom: 12 }}>
         {[
           { id: 'users', label: '👥 Users & Roles' },
@@ -133,7 +132,6 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {/* USERS TAB */}
       {tab === 'users' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
           {profiles.map(p => {
@@ -166,7 +164,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ASSIGN LEADS TAB */}
       {tab === 'leads' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {leads.slice(0, 20).map(l => (
@@ -187,7 +184,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ASSIGN TASKS TAB */}
       {tab === 'tasks' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {tasks.slice(0, 20).map(t => {
@@ -211,7 +207,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* PERMISSIONS TAB */}
       {tab === 'perms' && (
         <div className="card" style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -243,7 +238,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ADD MEMBER MODAL */}
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'var(--s1)', border: '1px solid var(--b2)', borderRadius: 16, padding: '26px 30px', width: 440, maxWidth: '94vw' }}>
@@ -266,7 +260,7 @@ export default function AdminPage() {
               {ROLES.filter(r => r !== 'founder').map(r => <option key={r} value={r}>{ROLE_CONFIG[r].label}</option>)}
             </select>
             <div style={{ background: 'var(--s2)', borderRadius: 8, padding: '10px 12px', marginBottom: 14, fontSize: 12, color: 'var(--mu2)' }}>
-              🔑 Login credentials: <strong>{form.email || 'email@...'}</strong> / <strong>{form.name ? form.name.split(' ')[0] + '@1234' : 'FirstName@1234'}</strong>
+              🔑 Login: <strong>{form.email || 'email@...'}</strong> / <strong>{form.name ? form.name.split(' ')[0] + '@1234' : 'FirstName@1234'}</strong>
             </div>
             <div style={{ display: 'flex', gap: 9 }}>
               <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--b2)', borderRadius: 8, color: 'var(--mu2)', fontSize: 12.5, cursor: 'pointer', fontFamily: 'Outfit' }}>Cancel</button>
@@ -278,17 +272,12 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* CREDENTIALS MODAL */}
       {newCredentials && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'var(--s1)', border: '2px solid var(--gold)', borderRadius: 16, padding: '26px 30px', width: 420, maxWidth: '94vw' }}>
             <div style={{ fontFamily: 'Syne', fontSize: 17, fontWeight: 800, color: 'var(--gold)', marginBottom: 20 }}>✅ Member Added!</div>
             <div style={{ background: 'var(--s2)', borderRadius: 12, padding: '16px', marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 12 }}>Yeh credentials member ko share karo:</div>
-              {[
-                { label: 'Email', value: newCredentials.email },
-                { label: 'Password', value: newCredentials.password },
-              ].map((item, i) => (
+              {[{ label: 'Email', value: newCredentials.email }, { label: 'Password', value: newCredentials.password }].map((item, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 1 ? '1px solid var(--b1)' : 'none' }}>
                   <span style={{ fontSize: 12, color: 'var(--mu)' }}>{item.label}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
