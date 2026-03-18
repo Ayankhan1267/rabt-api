@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase, ROLE_CONFIG, UserProfile } from '@/lib/supabase'
@@ -16,77 +16,77 @@ const NAV: NavSection[] = [
   {
     label: 'Command',
     items: [
-      { id: 'dashboard', label: 'Dashboard', icon: '?', href: '/dashboard', roles: ['founder', 'manager'] },
-      { id: 'specialist-dashboard', label: 'Specialist Panel', icon: '??', href: '/specialist-dashboard', roles: ['specialist'] },
-      { id: 'patients', label: 'My Patients', icon: '??', href: '/patients', roles: ['specialist'] },
-      { id: 'specialist-manager', label: 'Specialist Manager', icon: '?????', href: '/specialist-manager', roles: ['specialist_manager', 'admin'] },
-      { id: 'admin', label: 'Admin Panel', icon: '???', href: '/admin', roles: ['founder'] },
-      { id: 'kanban', label: 'Kanban', icon: '?', href: '/kanban', roles: ['founder', 'manager', 'ops', 'support', 'specialist_manager'] },
-      { id: 'calendar', label: 'Calendar', icon: '??', href: '/calendar', roles: ['founder', 'manager', 'ops', 'support', 'specialist_manager'] },
+      { id: 'dashboard', label: 'Dashboard', icon: '⚡', href: '/dashboard', roles: ['founder', 'manager'] },
+      { id: 'specialist-dashboard', label: 'Specialist Panel', icon: '🌿', href: '/specialist-dashboard', roles: ['specialist'] },
+      { id: 'patients', label: 'My Patients', icon: '👥', href: '/patients', roles: ['specialist'] },
+      { id: 'specialist-manager', label: 'Specialist Manager', icon: '👩‍⚕️', href: '/specialist-manager', roles: ['specialist_manager', 'admin'] },
+      { id: 'admin', label: 'Admin Panel', icon: '🛡️', href: '/admin', roles: ['founder'] },
+      { id: 'kanban', label: 'Kanban', icon: '⬜', href: '/kanban', roles: ['founder', 'manager', 'ops', 'support', 'specialist_manager'] },
+      { id: 'calendar', label: 'Calendar', icon: '📅', href: '/calendar', roles: ['founder', 'manager', 'ops', 'support', 'specialist_manager'] },
     ]
   },
   {
     label: 'Partner',
     roles: ['partner'],
     items: [
-      { id: 'partner', label: 'Partner Portal', icon: '??', href: '/partner', roles: ['partner'] },
+      { id: 'partner', label: 'Partner Portal', icon: '🌿', href: '/partner', roles: ['partner'] },
     ]
   },
   {
     label: 'Sales',
     items: [
-      { id: 'crm', label: 'CRM / Leads', icon: '??', href: '/crm', roles: ['founder', 'manager', 'specialist_manager', 'specialist', 'support'] },
-      { id: 'orders', label: 'Orders', icon: '??', href: '/orders', roles: ['founder', 'manager', 'ops', 'support'] },
-      { id: 'inventory', label: 'Inventory', icon: '???', href: '/inventory', roles: ['founder', 'manager', 'ops'] },
+      { id: 'crm', label: 'CRM / Leads', icon: '👥', href: '/crm', roles: ['founder', 'manager', 'specialist_manager', 'specialist', 'support'] },
+      { id: 'orders', label: 'Orders', icon: '📦', href: '/orders', roles: ['founder', 'manager', 'ops', 'support'] },
+      { id: 'inventory', label: 'Inventory', icon: '🗄️', href: '/inventory', roles: ['founder', 'manager', 'ops'] },
     ]
   },
   {
     label: 'Specialist',
     roles: ['founder', 'specialist_manager', 'specialist'],
     items: [
-      { id: 'consultations', label: 'Consultations', icon: '??', href: '/consultations', roles: ['admin', 'specialist_manager'] },
-      { id: 'skinprofiles', label: 'Skin Profiles', icon: '??', href: '/skinprofiles' },
-      { id: 'specialists', label: 'Specialists', icon: '?????', href: '/specialists', roles: ['founder', 'specialist_manager'] },
+      { id: 'consultations', label: 'Consultations', icon: '🧴', href: '/consultations', roles: ['admin', 'specialist_manager'] },
+      { id: 'skinprofiles', label: 'Skin Profiles', icon: '🌿', href: '/skinprofiles' },
+      { id: 'specialists', label: 'Specialists', icon: '👩‍⚕️', href: '/specialists', roles: ['founder', 'specialist_manager'] },
     ]
   },
   {
     label: 'Support',
     roles: ['founder', 'manager', 'support', 'ops', 'specialist_manager'],
     items: [
-      { id: 'support', label: 'Support Chat', icon: '??', href: '/support', badge: '5', badgeColor: 'var(--red)', roles: ['founder', 'manager', 'support', 'ops', 'specialist_manager'] },
-      { id: 'reminders', label: 'Reminders & Follow-up', icon: '??', href: '/reminders', roles: ['founder', 'manager', 'support', 'ops', 'specialist_manager'] },
+      { id: 'support', label: 'Support Chat', icon: '💬', href: '/support', badge: '5', badgeColor: 'var(--red)', roles: ['founder', 'manager', 'support', 'ops', 'specialist_manager'] },
+      { id: 'reminders', label: 'Reminders & Follow-up', icon: '📲', href: '/reminders', roles: ['founder', 'manager', 'support', 'ops', 'specialist_manager'] },
     ]
   },
   {
     label: 'Marketing',
     roles: ['founder', 'manager'],
     items: [
-      { id: 'marketing', label: 'Marketing', icon: '??', href: '/marketing' },
-      { id: 'content', label: 'Content Studio', icon: '??', href: '/content' },
-      { id: 'ads', label: 'Ads Manager', icon: '??', href: '/ads' },
-      { id: 'website', label: 'Website Analytics', icon: '??', href: '/website' },
-      { id: 'partner-portal', label: 'Partner Portal', icon: '??', href: '/partner' },
-      { id: 'partner-manager', label: 'Partner Manager', icon: '??', href: '/partner-manager' },
+      { id: 'marketing', label: 'Marketing', icon: '📢', href: '/marketing' },
+      { id: 'content', label: 'Content Studio', icon: '🎬', href: '/content' },
+      { id: 'ads', label: 'Ads Manager', icon: '📊', href: '/ads' },
+      { id: 'website', label: 'Website Analytics', icon: '🌐', href: '/website' },
+      { id: 'partner-portal', label: 'Partner Portal', icon: '🌿', href: '/partner' },
+      { id: 'partner-manager', label: 'Partner Manager', icon: '🤝', href: '/partner-manager' },
     ]
   },
   {
     label: 'Business',
     roles: ['founder', 'manager'],
     items: [
-      { id: 'finance', label: 'Finance', icon: '??', href: '/finance' },
-      { id: 'productlab', label: 'Product Lab', icon: '??', href: '/productlab' },
-      { id: 'goals', label: 'Goals & OKR', icon: '??', href: '/goals' },
-      { id: 'reports', label: 'Reports', icon: '??', href: '/reports' },
-      { id: 'team', label: 'Team', icon: '??', href: '/team' },
+      { id: 'finance', label: 'Finance', icon: '💰', href: '/finance' },
+      { id: 'productlab', label: 'Product Lab', icon: '🧪', href: '/productlab' },
+      { id: 'goals', label: 'Goals & OKR', icon: '🎯', href: '/goals' },
+      { id: 'reports', label: 'Reports', icon: '📋', href: '/reports' },
+      { id: 'team', label: 'Team', icon: '🤝', href: '/team' },
     ]
   },
   {
     label: 'AI System',
     roles: ['founder', 'manager', 'ops', 'specialist_manager'],
     items: [
-      { id: 'automation', label: 'Automation', icon: '??', href: '/automation', roles: ['founder', 'manager'] },
-      { id: 'aiagents', label: 'AI Agents', icon: '??', href: '/aiagents', badge: 'Live', badgeColor: 'var(--green)', roles: ['founder', 'manager', 'ops', 'specialist_manager'] },
-      { id: 'knowledge', label: 'Knowledge Base', icon: '??', href: '/knowledge', roles: ['founder', 'manager', 'ops', 'specialist_manager'] },
+      { id: 'automation', label: 'Automation', icon: '⚙️', href: '/automation', roles: ['founder', 'manager'] },
+      { id: 'aiagents', label: 'AI Agents', icon: '🤖', href: '/aiagents', badge: 'Live', badgeColor: 'var(--green)', roles: ['founder', 'manager', 'ops', 'specialist_manager'] },
+      { id: 'knowledge', label: 'Knowledge Base', icon: '📚', href: '/knowledge', roles: ['founder', 'manager', 'ops', 'specialist_manager'] },
     ]
   },
 ]
