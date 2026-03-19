@@ -188,6 +188,28 @@ app.get('/api/analytics', async (req, res) => {
   }
 });
 
+
+// ── MISSING ROUTES ──
+app.get('/api/payouts', async (req, res) => {
+  try {
+    const payouts = await db.collection('payouts').find({}).sort({ createdAt: -1 }).toArray();
+    res.json(payouts);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/specialists', async (req, res) => {
+  try {
+    const specialists = await db.collection('specialists').find({}).toArray();
+    res.json(specialists);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/sessions', async (req, res) => {
+  try {
+    const sessions = await db.collection('sessions').find({}).sort({ createdAt: -1 }).limit(50).toArray();
+    res.json(sessions);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
 // ── SESSIONS / RECENT ACTIVITY ──
 app.get('/api/sessions/recent', async (req, res) => {
   try {
