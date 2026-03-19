@@ -35,6 +35,8 @@ const NAV: NavSection[] = [
   {
     label: 'Sales',
     items: [
+      { id: 'landing', label: 'Landing Page', icon: '🌐', href: '/website', roles: ['founder', 'manager'] },
+      { id: 'website', label: 'Website Analytics', icon: '📊', href: '/website-analytics', roles: ['founder', 'manager'] },
       { id: 'customers', label: 'Customers', icon: '👥', href: '/customers', roles: ['founder', 'manager', 'ops', 'specialist_manager'] },
       { id: 'crm', label: 'CRM / Leads', icon: '👥', href: '/crm', roles: ['founder', 'manager', 'specialist_manager', 'specialist', 'support'] },
       { id: 'orders', label: 'Orders', icon: '📦', href: '/orders', roles: ['founder', 'manager', 'ops', 'support'] },
@@ -66,7 +68,7 @@ const NAV: NavSection[] = [
       { id: 'marketing', label: 'Marketing', icon: '📢', href: '/marketing' },
       { id: 'content', label: 'Content Studio', icon: '🎬', href: '/content' },
       { id: 'ads', label: 'Ads Manager', icon: '📊', href: '/ads' },
-      { id: 'website', label: 'Website Analytics', icon: '🌐', href: '/website' },
+
       { id: 'partner-portal', label: 'Partner Portal', icon: '🌿', href: '/partner' },
       { id: 'partner-manager', label: 'Partner Manager', icon: '🤝', href: '/partner-manager' },
     ]

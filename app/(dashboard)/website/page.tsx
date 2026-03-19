@@ -1,604 +1,563 @@
-﻿'use client'
-import { useEffect, useState, useRef } from 'react'
+'use client'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 
-const DATE_RANGES = [
-  { label: 'Today', value: 'today', start: 'today' },
-  { label: '7 Days', value: '7d', start: '7daysAgo' },
-  { label: '30 Days', value: '30d', start: '30daysAgo' },
-  { label: '90 Days', value: '90d', start: '90daysAgo' },
+const TABS = [
+  { id: 'hero',         l: '🏠 Hero',          desc: 'Main banner content' },
+  { id: 'testimonials', l: '⭐ Testimonials',   desc: 'Customer reviews' },
+  { id: 'trust',        l: '🏆 Trust Badges',  desc: 'Stats & trust signals' },
+  { id: 'seo',          l: '🔍 SEO',           desc: 'Meta tags & AI SEO' },
+  { id: 'analytics',    l: '📊 Analytics',     desc: 'Traffic & performance' },
+  { id: 'settings',     l: '⚙️ Settings',      desc: 'Links & general' },
 ]
-const SOURCE_COLORS: Record<string, string> = {
-  google: 'var(--blue)', instagram: 'var(--orange)', facebook: 'var(--blue)',
-  direct: 'var(--teal)', whatsapp: 'var(--green)', youtube: 'var(--red)',
-  '(direct)': 'var(--teal)', organic: 'var(--green)',
-}
-const ACTION_META: Record<string, { label: string; color: string; emoji: string }> = {
-  browsing:        { label: 'Browsing',        color: 'var(--mu)',    emoji: '👁️' },
-  viewing_product: { label: 'Viewing Product', color: 'var(--blue)',  emoji: '🧴' },
-  added_to_cart:   { label: 'Added to Cart',   color: 'var(--teal)',  emoji: '🛒' },
-  skin_analysis:   { label: 'Skin Analysis',   color: 'var(--gold)',  emoji: '🔬' },
-  know_your_skin:  { label: 'Know Your Skin',  color: 'var(--purple)','emoji': '🧬' },
-  checkout:        { label: 'Checking Out',    color: 'var(--green)', emoji: '💳' },
-  consultation:    { label: 'Consultation',    color: 'var(--orange)','emoji': '👩‍⚕️' },
-}
-function fmt(sec: number) {
-  const m = Math.floor(sec / 60), s = Math.round(sec % 60)
-  return `${m}m ${s}s`
+
+const DEFAULT_CONTENT = {
+  hero_badge: "India's First Pulses & Grains Skincare",
+  hero_title: "Where Nature Bonds With Skin.",
+  hero_subtitle: '"Rabt" — the timeless bond between skin and nature.',
+  hero_desc: 'Discover your real skin type with our AI Skin Analysis and receive a personalised routine designed by our Skin Stylists.',
+  hero_cta_primary: 'Know Your Skin →',
+  hero_cta_secondary: 'Explore Products',
+  hero_note: 'Free · 2 Minutes · 32 Skin Parameters',
+  nav_cta: 'Know Your Skin',
+  skin_analysis_url: 'https://rabtnaturals.com/skin-analysis',
+  products_url: 'https://rabtnaturals.com/products',
+  meta_title: 'Rabt Naturals – Know Your Skin | AI Skin Analysis',
+  meta_desc: 'India\'s first pulses & grains skincare. Discover your real skin type with AI Skin Analysis and get a personalised routine by Skin Stylists.',
+  meta_keywords: 'natural skincare, AI skin analysis, Indian skincare, pulses skincare, personalized skincare routine',
+  trust_stat1_num: '10,000+',
+  trust_stat1_label: 'Skin Profiles Created',
+  trust_stat2_num: '98%',
+  trust_stat2_label: 'Customer Satisfaction',
+  trust_stat3_num: '50+',
+  trust_stat3_label: 'Natural Ingredients',
+  trust_stat4_num: '4.9★',
+  trust_stat4_label: 'Average Rating',
 }
 
-export default function WebsiteAnalyticsPage() {
-  const [overview, setOverview]     = useState<any>(null)
-  const [sources, setSources]       = useState<any[]>([])
-  const [states, setStates]         = useState<any[]>([])
-  const [pages, setPages]           = useState<any[]>([])
-  const [daily, setDaily]           = useState<any[]>([])
-  const [carts, setCarts]           = useState<any[]>([])
-  const [orders, setOrders]         = useState<any[]>([])
-  const [live, setLive]             = useState<any>({ count: 0, visitors: [], byAction: {} })
-  const [trackStats, setTrackStats] = useState<any>(null)
-  const [gaConfigured, setGaConfigured] = useState(false)
-  const [loading, setLoading]       = useState(true)
-  const [liveLoading, setLiveLoading] = useState(false)
-  const [tab, setTab]               = useState<'live'|'overview'|'traffic'|'geo'|'pages'|'carts'>('live')
-  const [dateRange, setDateRange]   = useState('30d')
+const DEFAULT_TESTIMONIALS = [
+  { name: 'Komal Singh', skin: 'Acne-Prone · Verified Buyer', quote: 'My skin is smoother and clearer than ever. I finally feel confident going makeup-free!', product: '🧴 Niacinamide Serum', image: 'https://rabtnaturals.com/testi2.jpg', stars: 5 },
+  { name: 'Mukul Parmar', skin: 'Dry Hair · Verified Buyer', quote: 'Soft, shiny, and smells amazing! Highly recommend for anyone with damaged hair.', product: '💧 Hydrating Serum', image: 'https://rabtnaturals.com/testi1.jpg', stars: 5 },
+  { name: 'Somya Jain', skin: 'Combination · Verified Buyer', quote: 'Perfect coverage without feeling heavy. Lasts all day even in humid weather!', product: '✨ Vitamin C Cream', image: 'https://rabtnaturals.com/testi3.jpg', stars: 5 },
+  { name: 'Priya Sharma', skin: 'Oily Skin · Verified Buyer', quote: 'Oil control is incredible. My T-zone stays matte all day without drying out.', product: '🌿 Oats Moisturizer', image: 'https://rabtnaturals.com/testi2.jpg', stars: 5 },
+  { name: 'Rahul Verma', skin: 'Sensitive · Verified Buyer', quote: 'Zero irritation. My skin barrier feels stronger than it has in years.', product: '☀️ SPF 50+ Sunscreen', image: 'https://rabtnaturals.com/testi1.jpg', stars: 5 },
+  { name: 'Anjali Mehta', skin: 'Dark Spots · Verified Buyer', quote: 'My dark spots faded within a month. The AI quiz recommended exactly what I needed.', product: '🔬 Alpha Arbutin Serum', image: 'https://rabtnaturals.com/testi3.jpg', stars: 5 },
+]
+
+export default function WebsiteManagerPage() {
+  const [tab, setTab]               = useState('hero')
   const [mounted, setMounted]       = useState(false)
-  const liveInterval = useRef<any>(null)
+  const [saving, setSaving]         = useState(false)
+  const [aiLoading, setAiLoading]   = useState(false)
+  const [content, setContent]       = useState<Record<string, string>>(DEFAULT_CONTENT)
+  const [testimonials, setTestimonials] = useState<any[]>(DEFAULT_TESTIMONIALS)
+  const [editingTesti, setEditingTesti] = useState<any>(null)
+  const [analytics, setAnalytics]   = useState<any>(null)
 
-  useEffect(() => {
-    setMounted(true)
-    loadAll()
-    fetchLive()
-    liveInterval.current = setInterval(fetchLive, 15000) // refresh every 15s
-    return () => clearInterval(liveInterval.current)
-  }, [])
+  useEffect(() => { setMounted(true); loadAll() }, [])
 
-  async function fetchLive() {
-    const url = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null
-    if (!url) return
-    try {
-      setLiveLoading(true)
-      const [lvRes, trRes] = await Promise.allSettled([
-        fetch(`${url}/api/live/visitors`).then(r => r.json()),
-        fetch(`${url}/api/tracking/stats`).then(r => r.json()),
-      ])
-      if (lvRes.status === 'fulfilled' && lvRes.value?.count !== undefined) setLive(lvRes.value)
-      if (trRes.status === 'fulfilled' && !trRes.value?.error) setTrackStats(trRes.value)
-    } catch {}
-    setLiveLoading(false)
+  async function loadAll() {
+    const { data: contentData } = await supabase.from('app_settings').select('value').eq('key', 'landing_content').single()
+    const { data: testiData }   = await supabase.from('app_settings').select('value').eq('key', 'landing_testimonials').single()
+    const { data: analyticsData } = await supabase.from('app_settings').select('value').eq('key', 'landing_analytics').single()
+    if (contentData?.value) setContent({ ...DEFAULT_CONTENT, ...JSON.parse(contentData.value) })
+    if (testiData?.value) setTestimonials(JSON.parse(testiData.value))
+    if (analyticsData?.value) setAnalytics(JSON.parse(analyticsData.value))
   }
 
-  async function loadAll(range = dateRange) {
-    setLoading(true)
-    const url = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MONGO_API_URL || process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url') : null
-    const startDate = DATE_RANGES.find(d => d.value === range)?.start || '30daysAgo'
-    try {
-      if (url) {
-        const [ovRes, srcRes, stRes, pgRes, dyRes, cartRes, ordRes] = await Promise.allSettled([
-          fetch(`${url}/api/ga/overview?startDate=${startDate}&endDate=today`).then(r => r.json()),
-          fetch(`${url}/api/ga/sources?startDate=${startDate}&endDate=today`).then(r => r.json()),
-          fetch(`${url}/api/ga/states?startDate=${startDate}&endDate=today`).then(r => r.json()),
-          fetch(`${url}/api/ga/pages?startDate=${startDate}&endDate=today`).then(r => r.json()),
-          fetch(`${url}/api/ga/daily?startDate=${startDate}&endDate=today`).then(r => r.json()),
-          fetch(`${url}/api/carts`).then(r => r.ok ? r.json() : []),
-          fetch(`${url}/api/orders`).then(r => r.ok ? r.json() : []),
-        ])
-        if (ovRes.status === 'fulfilled' && !ovRes.value?.error) { setOverview(ovRes.value); setGaConfigured(true) }
-        if (srcRes.status === 'fulfilled' && Array.isArray(srcRes.value)) setSources(srcRes.value)
-        if (stRes.status === 'fulfilled' && Array.isArray(stRes.value))   setStates(stRes.value)
-        if (pgRes.status === 'fulfilled' && Array.isArray(pgRes.value))   setPages(pgRes.value)
-        if (dyRes.status === 'fulfilled' && Array.isArray(dyRes.value))   setDaily(dyRes.value)
-        if (cartRes.status === 'fulfilled' && Array.isArray(cartRes.value)) setCarts(cartRes.value)
-        if (ordRes.status === 'fulfilled' && Array.isArray(ordRes.value)) setOrders(ordRes.value)
-      }
-    } catch { toast.error('Failed to load') }
-    setLoading(false)
+  async function saveContent() {
+    setSaving(true)
+    await supabase.from('app_settings').upsert({ key: 'landing_content', value: JSON.stringify(content) })
+    toast.success('Content saved! ✅ Landing page update ho jayega.')
+    setSaving(false)
   }
 
-  // Cart analytics
-  const activeCarts   = carts.filter(c => { const h = (Date.now() - new Date(c.updatedAt||c.createdAt||0).getTime())/(1000*3600); return h < 24 && !c.orderId })
-  const abandonedCarts= carts.filter(c => { const h = (Date.now() - new Date(c.updatedAt||c.createdAt||0).getTime())/(1000*3600); return h >= 24 && !c.orderId })
-  const abandonedValue= abandonedCarts.reduce((s,c) => s+(c.total||0), 0)
-  const activeValue   = activeCarts.reduce((s,c) => s+(c.total||0), 0)
+  async function saveTestimonials() {
+    setSaving(true)
+    await supabase.from('app_settings').upsert({ key: 'landing_testimonials', value: JSON.stringify(testimonials) })
+    toast.success('Testimonials saved! ✅')
+    setSaving(false)
+  }
 
-  const stateSales: Record<string, {orders:number,revenue:number}> = {}
-  orders.forEach(o => { const st = o.shippingAddress?.state||o.state||'Unknown'; if(!stateSales[st]) stateSales[st]={orders:0,revenue:0}; stateSales[st].orders++; stateSales[st].revenue+=o.amount||0 })
-  const topSalesStates = Object.entries(stateSales).sort((a,b)=>b[1].revenue-a[1].revenue).slice(0,10)
-  const maxSessions = Math.max(...daily.map(d=>d.sessions),1)
+  async function deleteTestimonial(idx: number) {
+    const updated = testimonials.filter((_, i) => i !== idx)
+    setTestimonials(updated)
+    await supabase.from('app_settings').upsert({ key: 'landing_testimonials', value: JSON.stringify(updated) })
+    toast.success('Testimonial deleted!')
+  }
+
+  async function addTestimonial() {
+    const newT = { name: 'New Customer', skin: 'Skin Type · Verified Buyer', quote: 'Amazing product!', product: '🌿 Product Name', image: '', stars: 5 }
+    const updated = [...testimonials, newT]
+    setTestimonials(updated)
+    setEditingTesti(updated.length - 1)
+  }
+
+  async function uploadVideo(idx: number, file: File) {
+    toast.loading('Video upload ho raha hai...', { id: 'upload' })
+    try {
+      const ext = file.name.split('.').pop()
+      const path = `testimonials/video-${idx}-${Date.now()}.${ext}`
+      const { error } = await supabase.storage.from('landing-assets').upload(path, file, { upsert: true })
+      if (error) throw error
+      const { data: urlData } = supabase.storage.from('landing-assets').getPublicUrl(path)
+      const updated = testimonials.map((t, i) => i === idx ? { ...t, video_url: urlData.publicUrl } : t)
+      setTestimonials(updated)
+      await supabase.from('app_settings').upsert({ key: 'landing_testimonials', value: JSON.stringify(updated) })
+      toast.success('Video uploaded! ✅', { id: 'upload' })
+    } catch (e: any) {
+      toast.error('Upload failed: ' + e.message, { id: 'upload' })
+    }
+  }
+
+  async function uploadImage(idx: number, file: File) {
+    toast.loading('Image upload ho rahi hai...', { id: 'img-upload' })
+    try {
+      const ext = file.name.split('.').pop()
+      const path = `testimonials/img-${idx}-${Date.now()}.${ext}`
+      const { error } = await supabase.storage.from('landing-assets').upload(path, file, { upsert: true })
+      if (error) throw error
+      const { data: urlData } = supabase.storage.from('landing-assets').getPublicUrl(path)
+      const updated = testimonials.map((t, i) => i === idx ? { ...t, image: urlData.publicUrl } : t)
+      setTestimonials(updated)
+      await supabase.from('app_settings').upsert({ key: 'landing_testimonials', value: JSON.stringify(updated) })
+      toast.success('Image uploaded! ✅', { id: 'img-upload' })
+    } catch (e: any) {
+      toast.error('Upload failed: ' + e.message, { id: 'img-upload' })
+    }
+  }
+
+  async function generateAISEO() {
+    setAiLoading(true)
+    toast.loading('AI SEO generate kar raha hai...', { id: 'ai-seo' })
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: `Generate optimized SEO meta tags for a skincare brand landing page.
+Brand: Rabt Naturals
+Tagline: ${content.hero_title}
+Description: ${content.hero_desc}
+Keywords focus: natural skincare India, AI skin analysis, personalized skincare
+
+Return ONLY a JSON object with these keys:
+- meta_title (max 60 chars)
+- meta_desc (max 160 chars)  
+- meta_keywords (comma separated, 10 keywords)
+- og_title
+- og_desc
+- schema_desc
+
+No markdown, no explanation, just JSON.`
+          }]
+        })
+      })
+      const data = await res.json()
+      const text = data.content?.[0]?.text || ''
+      const clean = text.replace(/```json|```/g, '').trim()
+      const seo = JSON.parse(clean)
+      setContent(prev => ({ ...prev, ...seo }))
+      toast.success('AI SEO generated! ✅', { id: 'ai-seo' })
+    } catch {
+      toast.error('AI error — manually fill karo', { id: 'ai-seo' })
+    }
+    setAiLoading(false)
+  }
+
+  async function generateAIContent(field: string) {
+    setAiLoading(true)
+    toast.loading('AI content generate kar raha hai...', { id: 'ai-content' })
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 500,
+          messages: [{
+            role: 'user',
+            content: `Write a compelling ${field} for Rabt Naturals skincare brand landing page.
+Brand: India's first pulses & grains skincare
+Target: Indian women 18-35
+Tone: Premium, natural, trustworthy
+
+Return ONLY the text, no explanation, no quotes.`
+          }]
+        })
+      })
+      const data = await res.json()
+      const text = data.content?.[0]?.text?.trim() || ''
+      setContent(prev => ({ ...prev, [field]: text }))
+      toast.success('Content generated! ✅', { id: 'ai-content' })
+    } catch {
+      toast.error('AI error', { id: 'ai-content' })
+    }
+    setAiLoading(false)
+  }
+
+  const inp: any = {
+    background: 'var(--s2)', border: '1px solid var(--b2)', borderRadius: 8,
+    padding: '9px 12px', color: 'var(--tx)', fontSize: 13, fontFamily: 'Outfit',
+    outline: 'none', width: '100%', marginBottom: 12,
+  }
 
   if (!mounted) return null
 
   return (
     <div>
       {/* Header */}
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{fontFamily:'Syne',fontSize:22,fontWeight:800}}>🌐 Website <span style={{color:'var(--gold)'}}>Analytics</span></h1>
-          <p style={{color:'var(--mu)',fontSize:12.5,marginTop:4}}>rabtnaturals.com · Live tracking + GA4</p>
+          <h1 style={{ fontFamily: 'Syne', fontSize: 22, fontWeight: 800 }}>Website <span style={{ color: 'var(--teal)' }}>Manager</span></h1>
+          <p style={{ color: 'var(--mu)', fontSize: 12.5, marginTop: 4 }}>care.rabtnaturals.com ka content manage karo</p>
         </div>
-        <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          {/* Live dot */}
-          <div style={{display:'flex',alignItems:'center',gap:6,background:'var(--grL)',border:'1px solid rgba(34,197,94,.3)',borderRadius:50,padding:'5px 12px'}}>
-            <span style={{width:7,height:7,borderRadius:'50%',background:'#22C55E',display:'inline-block',animation:'pulse 1.5s infinite'}}/>
-            <span style={{fontSize:11.5,fontWeight:700,color:'var(--green)'}}>{live.count} Live</span>
-          </div>
-          <div style={{display:'flex',background:'var(--s2)',borderRadius:8,padding:3,gap:2}}>
-            {DATE_RANGES.map(dr=>(
-              <button key={dr.value} onClick={()=>{setDateRange(dr.value);loadAll(dr.value)}} style={{padding:'5px 12px',borderRadius:6,background:dateRange===dr.value?'var(--s1)':'transparent',border:'none',color:dateRange===dr.value?'var(--gold)':'var(--mu)',fontWeight:dateRange===dr.value?700:500,fontSize:11.5,cursor:'pointer',fontFamily:'Outfit'}}>
-                {dr.label}
-              </button>
-            ))}
-          </div>
-          <button onClick={()=>{loadAll();fetchLive()}} style={{padding:'8px 14px',background:'var(--blL)',border:'1px solid rgba(59,130,246,0.3)',borderRadius:8,color:'var(--blue)',fontWeight:700,fontSize:12.5,cursor:'pointer',fontFamily:'Outfit'}}>↺ Refresh</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <a href="https://care.rabtnaturals.com" target="_blank" rel="noopener noreferrer" style={{ padding: '8px 16px', background: 'var(--s2)', border: '1px solid var(--b1)', borderRadius: 8, color: 'var(--mu2)', fontSize: 12.5, fontWeight: 600, textDecoration: 'none', fontFamily: 'Outfit' }}>
+            🔗 View Live
+          </a>
+          <button onClick={saveContent} disabled={saving} style={{ padding: '8px 18px', background: 'linear-gradient(135deg,#0097A7,#005F6A)', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'Outfit' }}>
+            {saving ? '⏳ Saving...' : '💾 Save Changes'}
+          </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={{display:'flex',gap:6,marginBottom:20,flexWrap:'wrap'}}>
-        {[{id:'live',l:'🔴 Live'},{id:'overview',l:'📊 Overview'},{id:'traffic',l:'🔗 Sources'},{id:'geo',l:'📍 Location'},{id:'pages',l:'📄 Pages'},{id:'carts',l:'🛒 Carts'}].map(t=>(
-          <button key={t.id} onClick={()=>setTab(t.id as any)} style={{padding:'7px 14px',borderRadius:8,fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'Outfit',background:tab===t.id?'var(--gL)':'rgba(255,255,255,0.05)',color:tab===t.id?'var(--gold)':'var(--mu2)',border:'1px solid '+(tab===t.id?'rgba(212,168,83,0.3)':'var(--b1)')}}>
-            {t.l}{t.id==='carts'&&abandonedCarts.length>0&&<span style={{marginLeft:5,fontSize:9,background:'var(--red)',color:'#fff',borderRadius:50,padding:'1px 5px',fontWeight:800}}>{abandonedCarts.length}</span>}
-          </button>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, flexWrap: 'wrap' }}>
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{
+            padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Outfit', fontSize: 12.5,
+            border: '1px solid ' + (tab === t.id ? 'rgba(0,151,167,0.3)' : 'var(--b1)'),
+            background: tab === t.id ? 'rgba(0,151,167,0.1)' : 'var(--s2)',
+            color: tab === t.id ? 'var(--teal)' : 'var(--mu2)',
+            fontWeight: tab === t.id ? 700 : 500,
+          }}>{t.l}</button>
         ))}
       </div>
 
-      {/* ═══ LIVE TAB ═══ */}
-      {tab==='live'&&(
-        <div>
-          {/* Live KPIs */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:10,marginBottom:20}}>
-            {[
-              {l:'Live Visitors',v:live.count,c:'var(--green)',pulse:true,sub:'Right now'},
-              {l:'In Cart',v:live.byAction?.added_to_cart||0,c:'var(--teal)',sub:'Active carts'},
-              {l:'Skin Analysis',v:live.byAction?.skin_analysis||0,c:'var(--gold)',sub:'Taking quiz'},
-              {l:'Know Your Skin',v:live.byAction?.know_your_skin||0,c:'var(--purple)',sub:'On quiz page'},
-              {l:'Checkout',v:live.byAction?.checkout||0,c:'var(--orange)',sub:'About to buy'},
-              {l:'Consultation',v:live.byAction?.consultation||0,c:'var(--blue)',sub:'Booking consult'},
-            ].map((s,i)=>(
-              <div key={i} className="card">
-                <div style={{fontSize:9.5,fontWeight:700,color:'var(--mu)',textTransform:'uppercase',marginBottom:8,display:'flex',alignItems:'center',gap:5}}>
-                  {s.pulse&&<span style={{width:6,height:6,borderRadius:'50%',background:'var(--green)',display:'inline-block',animation:'pulse 1.5s infinite'}}/>}
-                  {s.l}
-                </div>
-                <div style={{fontFamily:'Syne',fontSize:22,fontWeight:800,color:s.c,marginBottom:3}}>{s.v}</div>
-                <div style={{fontSize:10,color:'var(--mu)'}}>{s.sub}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Today stats from tracking */}
-          {trackStats&&(
-            <div className="card" style={{marginBottom:16}}>
-              <div style={{fontFamily:'Syne',fontSize:13,fontWeight:800,marginBottom:14}}>📅 Today's Activity</div>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:12}}>
-                {[
-                  {k:'page_view',l:'Page Views',e:'👁️'},
-                  {k:'product_view',l:'Product Views',e:'🧴'},
-                  {k:'add_to_cart',l:'Add to Cart',e:'🛒'},
-                  {k:'skin_analysis_start',l:'Analysis Started',e:'🔬'},
-                  {k:'skin_analysis_complete',l:'Analysis Done',e:'✅'},
-                  {k:'consultation_start',l:'Consultation Started',e:'👩‍⚕️'},
-                  {k:'checkout_start',l:'Checkout Started',e:'💳'},
-                  {k:'order_placed',l:'Orders Placed',e:'📦'},
-                ].map((ev,i)=>{
-                  const todayVal = trackStats.todayByEvent?.[ev.k]||0
-                  const totalVal = trackStats.byEvent?.[ev.k]||0
-                  return(
-                    <div key={i} style={{background:'var(--s2)',borderRadius:12,padding:'12px 14px'}}>
-                      <div style={{fontSize:18,marginBottom:5}}>{ev.e}</div>
-                      <div style={{fontFamily:'Syne',fontSize:18,fontWeight:800,color:todayVal>0?'var(--gold)':'var(--mu)'}}>{todayVal}</div>
-                      <div style={{fontSize:10.5,fontWeight:600,color:'var(--mu2)',marginBottom:2}}>{ev.l}</div>
-                      <div style={{fontSize:10,color:'var(--mu)'}}>30d: {totalVal.toLocaleString()}</div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Live visitor list */}
+      {/* HERO */}
+      {tab === 'hero' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 16 }}>
           <div className="card">
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-              <div style={{fontFamily:'Syne',fontSize:13,fontWeight:800}}>Live Visitors</div>
-              <span style={{fontSize:11,color:'var(--mu)'}}>Auto-refreshes every 15s</span>
+            <div style={{ fontFamily: 'Syne', fontSize: 14, fontWeight: 800, marginBottom: 16 }}>🏠 Hero Section</div>
+
+            {[
+              { key: 'hero_badge',        l: 'Badge Text',      ph: "India's First..." },
+              { key: 'hero_title',        l: 'Main Heading',    ph: 'Where Nature...' },
+              { key: 'hero_subtitle',     l: 'Italic Subtitle', ph: '"Rabt" — ...' },
+              { key: 'hero_cta_primary',  l: 'Primary Button',  ph: 'Know Your Skin →' },
+              { key: 'hero_cta_secondary',l: 'Secondary Button',ph: 'Explore Products' },
+              { key: 'hero_note',         l: 'Small Note',      ph: 'Free · 2 Minutes...' },
+              { key: 'nav_cta',           l: 'Nav Button Text', ph: 'Know Your Skin' },
+            ].map(f => (
+              <div key={f.key}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu2)', textTransform: 'uppercase' }}>{f.l}</label>
+                  <button onClick={() => generateAIContent(f.key)} disabled={aiLoading} style={{ fontSize: 10, padding: '2px 8px', background: 'rgba(0,151,167,0.1)', border: 'none', borderRadius: 4, color: 'var(--teal)', cursor: 'pointer', fontWeight: 600 }}>✨ AI</button>
+                </div>
+                <input value={content[f.key] || ''} onChange={e => setContent(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.ph} style={inp} />
+              </div>
+            ))}
+
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu2)', textTransform: 'uppercase', marginBottom: 5, display: 'block' }}>Hero Description</label>
+              <textarea value={content.hero_desc || ''} onChange={e => setContent(p => ({ ...p, hero_desc: e.target.value }))} rows={3} style={{ ...inp, resize: 'vertical' }} />
             </div>
-            {live.visitors.length===0?(
-              <div style={{textAlign:'center',padding:40,color:'var(--mu)'}}>
-                <div style={{fontSize:32,marginBottom:12}}>👥</div>
-                <div style={{fontSize:13,fontWeight:600}}>No live visitors right now</div>
-                <div style={{fontSize:11.5,marginTop:4,color:'var(--mu)',lineHeight:1.6}}>Add tracking script to rabtnaturals.com to see live data</div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu2)', textTransform: 'uppercase', marginBottom: 5, display: 'block' }}>Skin Analysis URL</label>
+                <input value={content.skin_analysis_url || ''} onChange={e => setContent(p => ({ ...p, skin_analysis_url: e.target.value }))} style={inp} />
               </div>
-            ):(
-              <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                {live.visitors.slice(0,20).map((v:any,i:number)=>{
-                  const meta = ACTION_META[v.action]||ACTION_META.browsing
-                  const secsAgo = Math.round((Date.now()-v.lastSeen)/1000)
-                  return(
-                    <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 13px',background:'var(--s2)',borderRadius:11,border:'1px solid var(--b1)'}}>
-                      <span style={{fontSize:18,flexShrink:0}}>{meta.emoji}</span>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
-                          <span style={{fontSize:11,fontWeight:700,color:meta.color,background:meta.color+'18',padding:'1px 8px',borderRadius:50}}>{meta.label}</span>
-                          {v.phone&&<span style={{fontSize:10.5,color:'var(--green)',fontWeight:600}}>{v.phone}</span>}
-                        </div>
-                        <div style={{fontSize:11,color:'var(--mu)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{v.page}</div>
-                      </div>
-                      <div style={{textAlign:'right',flexShrink:0}}>
-                        <div style={{fontSize:10,color:'var(--mu)'}}>{secsAgo}s ago</div>
-                        <div style={{fontSize:9.5,color:'var(--mu)',marginTop:1}}>{v.source}</div>
-                      </div>
-                      {v.phone&&(v.action==='added_to_cart'||v.action==='checkout')&&(
-                        <a href={`https://wa.me/${v.phone.replace(/\D/g,'')}?text=${encodeURIComponent('Hi! Kya main aapki Rabt Naturals order mein help kar sakti hoon? 🌿')}`} target="_blank" rel="noopener noreferrer" style={{fontSize:10,padding:'3px 9px',background:'var(--grL)',color:'var(--green)',borderRadius:50,fontWeight:700,textDecoration:'none',flexShrink:0}}>
-                          💬
-                        </a>
-                      )}
-                    </div>
-                  )
-                })}
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu2)', textTransform: 'uppercase', marginBottom: 5, display: 'block' }}>Products URL</label>
+                <input value={content.products_url || ''} onChange={e => setContent(p => ({ ...p, products_url: e.target.value }))} style={inp} />
               </div>
-            )}
+            </div>
+
+            <button onClick={saveContent} disabled={saving} style={{ width: '100%', padding: 12, background: 'linear-gradient(135deg,#0097A7,#005F6A)', border: 'none', borderRadius: 10, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'Syne' }}>
+              💾 Save Hero Content
+            </button>
           </div>
 
-          {/* Setup instructions if no data */}
-          {live.count===0&&!liveLoading&&(
-            <div style={{marginTop:16,background:'var(--blL)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:12,padding:'16px 18px',fontSize:12.5,color:'var(--blue)',lineHeight:1.9}}>
-              <strong>🔧 Setup Live Tracking on rabtnaturals.com</strong><br/>
-              Paste this in your website's <code style={{background:'rgba(59,130,246,0.1)',padding:'1px 5px',borderRadius:3}}>layout.tsx</code> or <code style={{background:'rgba(59,130,246,0.1)',padding:'1px 5px',borderRadius:3}}>_app.tsx</code>:<br/>
-              <div style={{background:'var(--s1)',border:'1px solid var(--b2)',borderRadius:8,padding:'10px 12px',marginTop:8,fontFamily:'DM Mono',fontSize:11,lineHeight:1.8,whiteSpace:'pre-wrap',color:'var(--tx)'}}>
-{`// Add to your website — tracks live visitors
-const RABT_API = 'https://rabt-api.onrender.com'
-const vid = localStorage.getItem('rabt_vid') || Math.random().toString(36).slice(2)
-localStorage.setItem('rabt_vid', vid)
-
-function pingServer(action = 'browsing') {
-  fetch(RABT_API + '/api/live/ping', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ visitorId: vid, page: location.pathname, action, source: document.referrer || 'direct' })
-  }).catch(()=>{})
-}
-
-pingServer()  // on load
-setInterval(() => pingServer(), 30000)  // every 30s`}
-              </div>
-              Then call <code style={{background:'rgba(59,130,246,0.1)',padding:'1px 5px',borderRadius:3}}>pingServer('added_to_cart')</code> when cart changes, <code style={{background:'rgba(59,130,246,0.1)',padding:'1px 5px',borderRadius:3}}>pingServer('skin_analysis')</code> when quiz starts.
+          {/* Preview */}
+          <div className="card" style={{ background: 'linear-gradient(135deg,#0A1414,#1A2828)', color: '#fff' }}>
+            <div style={{ fontFamily: 'Syne', fontSize: 12, fontWeight: 800, marginBottom: 16, color: '#8AACAC' }}>PREVIEW</div>
+            <div style={{ fontSize: 10, padding: '4px 12px', borderRadius: 20, background: 'rgba(26,155,160,0.2)', color: '#A8DADC', display: 'inline-block', marginBottom: 14 }}>
+              • {content.hero_badge}
             </div>
-          )}
+            <div style={{ fontFamily: 'Georgia', fontSize: 22, fontWeight: 500, lineHeight: 1.2, marginBottom: 8, color: '#fff' }}>
+              {content.hero_title}
+            </div>
+            <div style={{ fontSize: 13, color: '#8AACAC', fontStyle: 'italic', marginBottom: 10 }}>{content.hero_subtitle}</div>
+            <div style={{ fontSize: 11, color: '#4A6464', marginBottom: 16, lineHeight: 1.6 }}>{content.hero_desc}</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ padding: '8px 14px', background: '#1A9BA0', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{content.hero_cta_primary}</span>
+              <span style={{ padding: '8px 14px', border: '1px solid #1A9BA0', borderRadius: 20, fontSize: 11, color: '#A8DADC' }}>{content.hero_cta_secondary}</span>
+            </div>
+            <div style={{ fontSize: 10, color: '#4A6464', marginTop: 10 }}>✦ {content.hero_note}</div>
+          </div>
         </div>
       )}
 
-      {/* ═══ OVERVIEW TAB ═══ */}
-      {tab==='overview'&&(
+      {/* TESTIMONIALS */}
+      {tab === 'testimonials' && (
         <div>
-          {!gaConfigured&&(
-            <div style={{background:'var(--orL)',border:'1px solid rgba(249,115,22,0.3)',borderRadius:12,padding:'12px 16px',marginBottom:16,fontSize:12.5,color:'var(--orange)',lineHeight:1.7}}>
-              ⚠️ GA4 not configured — add <strong>GA_PROPERTY_ID</strong> + <strong>GA_SERVICE_ACCOUNT_JSON</strong> to Render env vars
-            </div>
-          )}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:10,marginBottom:20}}>
-            {[
-              {l:'Sessions',v:overview?.sessions?.toLocaleString('en-IN')||'—',c:'var(--blue)',sub:'Total visits'},
-              {l:'Users',v:overview?.users?.toLocaleString('en-IN')||'—',c:'var(--teal)',sub:'Unique'},
-              {l:'New Users',v:overview?.newUsers?.toLocaleString('en-IN')||'—',c:'var(--green)',sub:'First time'},
-              {l:'Page Views',v:overview?.pageViews?.toLocaleString('en-IN')||'—',c:'var(--purple)',sub:'Total views'},
-              {l:'Avg Duration',v:overview?.avgDuration?fmt(overview.avgDuration):'—',c:'var(--gold)',sub:'Time on site'},
-              {l:'Bounce Rate',v:overview?.bounceRate?Math.round(overview.bounceRate*100)+'%':'—',c:overview?.bounceRate>0.6?'var(--red)':'var(--green)',sub:'Single page'},
-            ].map((s,i)=>(
-              <div key={i} className="card">
-                <div style={{fontSize:9.5,fontWeight:700,color:'var(--mu)',textTransform:'uppercase',marginBottom:8}}>{s.l}</div>
-                <div style={{fontFamily:'Syne',fontSize:18,fontWeight:800,color:s.c,marginBottom:3}}>{loading?'...':s.v}</div>
-                <div style={{fontSize:10,color:'var(--mu)'}}>{s.sub}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ fontFamily: 'Syne', fontSize: 14, fontWeight: 800 }}>⭐ Customer Testimonials ({testimonials.length})</div>
+            <button onClick={addTestimonial} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,#0097A7,#005F6A)', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>+ Add Testimonial</button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 14 }}>
+            {testimonials.map((t, i) => (
+              <div key={i} className="card" style={{ border: editingTesti === i ? '2px solid var(--teal)' : '1px solid var(--b1)' }}>
+                {editingTesti === i ? (
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 10, color: 'var(--teal)' }}>Editing...</div>
+                    {[
+                      { k: 'name',    l: 'Name',    ph: 'Customer Name' },
+                      { k: 'skin',    l: 'Skin Type',ph: 'Oily · Verified Buyer' },
+                      { k: 'quote',   l: 'Quote',   ph: 'Amazing product...' },
+                      { k: 'product', l: 'Product', ph: '🌿 Product Name' },
+                    ].map(f => (
+                      <div key={f.k}>
+                        <label style={{ fontSize: 9, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', marginBottom: 3, display: 'block' }}>{f.l}</label>
+                        <input value={t[f.k] || ''} onChange={e => {
+                          const updated = testimonials.map((x, xi) => xi === i ? { ...x, [f.k]: e.target.value } : x)
+                          setTestimonials(updated)
+                        }} placeholder={f.ph} style={{ ...inp, marginBottom: 8 }} />
+                      </div>
+                    ))}
+
+                    {/* Image Upload */}
+                    <div style={{ marginBottom: 10 }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase' as const, marginBottom: 5 }}>Thumbnail Image</div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        {t.image && <img src={t.image} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' as const }} />}
+                        <label style={{ flex: 1, padding: '8px 12px', background: 'var(--blL)', border: '1px dashed var(--blue)', borderRadius: 8, cursor: 'pointer', fontSize: 11, color: 'var(--blue)', fontWeight: 600, textAlign: 'center' as const }}>
+                          📸 Upload Image
+                          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { if(e.target.files?.[0]) uploadImage(i, e.target.files[0]) }} />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Video Upload */}
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase' as const, marginBottom: 5 }}>Video</div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        {t.video_url && <video src={t.video_url} style={{ width: 48, height: 64, borderRadius: 8, objectFit: 'cover' as const }} />}
+                        <label style={{ flex: 1, padding: '8px 12px', background: 'rgba(139,92,246,0.1)', border: '1px dashed var(--purple)', borderRadius: 8, cursor: 'pointer', fontSize: 11, color: 'var(--purple)', fontWeight: 600, textAlign: 'center' as const }}>
+                          🎥 Upload Video
+                          <input type="file" accept="video/*" style={{ display: 'none' }} onChange={e => { if(e.target.files?.[0]) uploadVideo(i, e.target.files[0]) }} />
+                        </label>
+                      </div>
+                      {t.video_url && <div style={{ fontSize: 10, color: 'var(--green)', marginTop: 4 }}>✓ Video uploaded</div>}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => { setEditingTesti(null); saveTestimonials() }} style={{ flex: 1, padding: '8px', background: 'var(--grL)', border: 'none', borderRadius: 7, color: 'var(--green)', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Save</button>
+                      <button onClick={() => setEditingTesti(null)} style={{ padding: '8px 12px', background: 'var(--s2)', border: '1px solid var(--b1)', borderRadius: 7, color: 'var(--mu)', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13 }}>{t.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 2 }}>{t.skin}</div>
+                      </div>
+                      <div style={{ color: 'var(--gold)', fontSize: 12 }}>{'★'.repeat(t.stars || 5)}</div>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--mu2)', fontStyle: 'italic', marginBottom: 8, lineHeight: 1.5 }}>"{t.quote}"</div>
+                    <div style={{ fontSize: 11, color: 'var(--teal)', marginBottom: 12 }}>{t.product}</div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => setEditingTesti(i)} style={{ flex: 1, padding: '6px', background: 'var(--blL)', border: 'none', borderRadius: 6, color: 'var(--blue)', fontWeight: 600, fontSize: 11, cursor: 'pointer' }}>✏️ Edit</button>
+                      <button onClick={() => deleteTestimonial(i)} style={{ padding: '6px 10px', background: 'var(--rdL)', border: 'none', borderRadius: 6, color: 'var(--red)', fontSize: 11, cursor: 'pointer' }}>🗑️</button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
-          <div className="card" style={{marginBottom:16}}>
-            <div style={{fontFamily:'Syne',fontSize:13,fontWeight:800,marginBottom:16}}>Daily Traffic</div>
-            {daily.length>0?(
-              <div>
-                <div style={{display:'flex',gap:2,alignItems:'flex-end',height:120,overflowX:'auto'}}>
-                  {daily.slice(-30).map((d,i)=>(
-                    <div key={i} style={{flex:'0 0 auto',minWidth:8,display:'flex',flexDirection:'column',alignItems:'center'}}>
-                      <div title={d.date+': '+d.sessions+' sessions'} style={{width:8,background:'var(--blue)',borderRadius:'2px 2px 0 0',height:Math.round(d.sessions/maxSessions*110)+'px',minHeight:d.sessions>0?2:0}} />
-                    </div>
-                  ))}
-                </div>
-                <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--mu)',marginTop:6}}>
-                  <span>{daily[0]?.date?.replace(/(\d{4})(\d{2})(\d{2})/,'$2/$3')}</span>
-                  <span>Last 30 days</span>
-                  <span>{daily[daily.length-1]?.date?.replace(/(\d{4})(\d{2})(\d{2})/,'$2/$3')}</span>
-                </div>
-              </div>
-            ):(
-              <div style={{textAlign:'center',padding:30,color:'var(--mu)',fontSize:12}}>Configure GA4 to see traffic data</div>
-            )}
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-            <div className="card">
-              <div style={{fontFamily:'Syne',fontSize:13,fontWeight:800,marginBottom:12}}>Top Sources</div>
-              {sources.slice(0,5).map((s,i)=>(
-                <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'1px solid var(--b1)'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8}}>
-                    <span style={{width:8,height:8,borderRadius:'50%',background:SOURCE_COLORS[s.source.toLowerCase()]||'var(--mu)',display:'inline-block'}}/>
-                    <span style={{fontSize:12,fontWeight:600,textTransform:'capitalize'}}>{s.source}/{s.medium}</span>
-                  </div>
-                  <span style={{fontFamily:'DM Mono',fontSize:12,fontWeight:700,color:'var(--blue)'}}>{s.sessions.toLocaleString()}</span>
-                </div>
-              ))}
-              {sources.length===0&&<div style={{textAlign:'center',color:'var(--mu)',padding:16,fontSize:12}}>No source data</div>}
-            </div>
-            <div className="card">
-              <div style={{fontFamily:'Syne',fontSize:13,fontWeight:800,marginBottom:12}}>Top States</div>
-              {states.slice(0,5).map((s,i)=>(
-                <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'1px solid var(--b1)'}}>
-                  <span style={{fontSize:12,fontWeight:600}}>{s.state}</span>
-                  <span style={{fontFamily:'DM Mono',fontSize:12,fontWeight:700,color:'var(--teal)'}}>{s.sessions.toLocaleString()}</span>
-                </div>
-              ))}
-              {states.length===0&&<div style={{textAlign:'center',color:'var(--mu)',padding:16,fontSize:12}}>No location data</div>}
-            </div>
-          </div>
         </div>
       )}
 
-      {/* ═══ TRAFFIC TAB ═══ */}
-      {tab==='traffic'&&(
-        <div>
-          <div className="card" style={{marginBottom:16}}>
-            <div style={{fontFamily:'Syne',fontSize:13,fontWeight:800,marginBottom:16}}>Traffic by Source</div>
-            {sources.length>0?sources.map((s,i)=>{
-              const maxS=Math.max(...sources.map(x=>x.sessions),1)
-              return(
-                <div key={i} style={{marginBottom:12}}>
-                  <div style={{display:'flex',justifyContent:'space-between',fontSize:12.5,marginBottom:5}}>
-                    <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <span style={{width:10,height:10,borderRadius:'50%',background:SOURCE_COLORS[s.source.toLowerCase()]||'var(--mu)',display:'inline-block'}}/>
-                      <span style={{fontWeight:600,textTransform:'capitalize'}}>{s.source}</span>
-                      <span style={{color:'var(--mu)',fontSize:11}}>/ {s.medium}</span>
-                    </div>
-                    <div style={{display:'flex',gap:14,fontFamily:'DM Mono'}}>
-                      <span style={{color:'var(--blue)'}}>{s.sessions.toLocaleString()}</span>
-                      <span style={{color:'var(--teal)'}}>{s.users.toLocaleString()} users</span>
-                    </div>
+      {/* TRUST */}
+      {tab === 'trust' && (
+        <div className="card">
+          <div style={{ fontFamily: 'Syne', fontSize: 14, fontWeight: 800, marginBottom: 16 }}>🏆 Trust Badges & Stats</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            {[1, 2, 3, 4].map(n => (
+              <div key={n} style={{ background: 'var(--s2)', borderRadius: 10, padding: '14px 16px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--teal)', marginBottom: 10 }}>Stat {n}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div>
+                    <label style={{ fontSize: 9, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>Number</label>
+                    <input value={content[`trust_stat${n}_num`] || ''} onChange={e => setContent(p => ({ ...p, [`trust_stat${n}_num`]: e.target.value }))} placeholder="10,000+" style={inp} />
                   </div>
-                  <div style={{height:8,background:'var(--s2)',borderRadius:4,overflow:'hidden'}}>
-                    <div style={{height:'100%',width:Math.round(s.sessions/maxS*100)+'%',background:SOURCE_COLORS[s.source.toLowerCase()]||'var(--mu)',borderRadius:4}}/>
+                  <div>
+                    <label style={{ fontSize: 9, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>Label</label>
+                    <input value={content[`trust_stat${n}_label`] || ''} onChange={e => setContent(p => ({ ...p, [`trust_stat${n}_label`]: e.target.value }))} placeholder="Customers" style={inp} />
                   </div>
                 </div>
-              )
-            }):(
-              <div style={{textAlign:'center',padding:40,color:'var(--mu)'}}>Configure GA4 to see traffic sources</div>
-            )}
+              </div>
+            ))}
           </div>
-          {sources.length>0&&(
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:10}}>
+          <button onClick={saveContent} style={{ width: '100%', padding: 12, background: 'linear-gradient(135deg,#0097A7,#005F6A)', border: 'none', borderRadius: 10, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'Syne', marginTop: 16 }}>
+            💾 Save Trust Section
+          </button>
+        </div>
+      )}
+
+      {/* SEO */}
+      {tab === 'seo' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontFamily: 'Syne', fontSize: 14, fontWeight: 800 }}>🔍 SEO Settings</div>
+              <button onClick={generateAISEO} disabled={aiLoading} style={{ padding: '7px 14px', background: 'linear-gradient(135deg,#8B5CF6,#6D28D9)', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                {aiLoading ? '⏳ Generating...' : '✨ AI Generate SEO'}
+              </button>
+            </div>
+
+            {[
+              { key: 'meta_title',    l: 'Page Title',         ph: 'Rabt Naturals – ...', max: 60 },
+              { key: 'meta_keywords', l: 'Keywords',            ph: 'natural skincare, ...' },
+              { key: 'og_title',      l: 'OG Title',            ph: 'Social share title' },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu2)', textTransform: 'uppercase', marginBottom: 5, display: 'block' }}>
+                  {f.l} {f.max && <span style={{ color: content[f.key]?.length > f.max ? 'var(--red)' : 'var(--mu)' }}>({content[f.key]?.length || 0}/{f.max})</span>}
+                </label>
+                <input value={content[f.key] || ''} onChange={e => setContent(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.ph} style={inp} />
+              </div>
+            ))}
+
+            {[
+              { key: 'meta_desc', l: 'Meta Description', ph: 'Max 160 chars...', max: 160 },
+              { key: 'og_desc',   l: 'OG Description',   ph: 'Social share desc...' },
+              { key: 'schema_desc', l: 'Schema Description', ph: 'Structured data...' },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu2)', textTransform: 'uppercase', marginBottom: 5, display: 'block' }}>
+                  {f.l} {f.max && <span style={{ color: content[f.key]?.length > f.max ? 'var(--red)' : 'var(--mu)' }}>({content[f.key]?.length || 0}/{f.max})</span>}
+                </label>
+                <textarea value={content[f.key] || ''} onChange={e => setContent(p => ({ ...p, [f.key]: e.target.value }))} rows={3} placeholder={f.ph} style={{ ...inp, resize: 'vertical' }} />
+              </div>
+            ))}
+
+            <button onClick={saveContent} style={{ width: '100%', padding: 12, background: 'linear-gradient(135deg,#8B5CF6,#6D28D9)', border: 'none', borderRadius: 10, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'Syne' }}>
+              💾 Save SEO Settings
+            </button>
+          </div>
+
+          {/* SEO Preview */}
+          <div>
+            <div className="card" style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', marginBottom: 10 }}>Google Preview</div>
+              <div style={{ padding: '12px 14px', background: '#fff', borderRadius: 8, border: '1px solid #e0e0e0' }}>
+                <div style={{ fontSize: 11, color: '#006621', marginBottom: 2 }}>care.rabtnaturals.com</div>
+                <div style={{ fontSize: 15, color: '#1a0dab', fontWeight: 400, marginBottom: 4, lineHeight: 1.3 }}>{content.meta_title || 'Page Title'}</div>
+                <div style={{ fontSize: 12, color: '#545454', lineHeight: 1.5 }}>{(content.meta_desc || 'Meta description...').slice(0, 160)}</div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', marginBottom: 10 }}>SEO Score</div>
               {[
-                {l:'Organic',v:sources.filter(s=>s.medium==='organic').reduce((a,s)=>a+s.sessions,0),c:'var(--green)'},
-                {l:'Social',v:sources.filter(s=>['instagram','facebook','youtube'].includes(s.source.toLowerCase())).reduce((a,s)=>a+s.sessions,0),c:'var(--orange)'},
-                {l:'Direct',v:sources.filter(s=>s.source==='(direct)'||s.medium==='(none)').reduce((a,s)=>a+s.sessions,0),c:'var(--teal)'},
-                {l:'Paid',v:sources.filter(s=>s.medium==='cpc'||s.medium==='paid').reduce((a,s)=>a+s.sessions,0),c:'var(--red)'},
-                {l:'Referral',v:sources.filter(s=>s.medium==='referral').reduce((a,s)=>a+s.sessions,0),c:'var(--purple)'},
-              ].map((s,i)=>(
-                <div key={i} className="card">
-                  <div style={{fontSize:9.5,fontWeight:700,color:'var(--mu)',textTransform:'uppercase',marginBottom:8}}>{s.l}</div>
-                  <div style={{fontFamily:'Syne',fontSize:20,fontWeight:800,color:s.c}}>{s.v.toLocaleString()}</div>
+                { l: 'Title Length',   ok: content.meta_title?.length >= 30 && content.meta_title?.length <= 60 },
+                { l: 'Meta Desc',      ok: content.meta_desc?.length >= 120 && content.meta_desc?.length <= 160 },
+                { l: 'Keywords Set',   ok: !!content.meta_keywords },
+                { l: 'OG Tags',        ok: !!content.og_title && !!content.og_desc },
+                { l: 'Schema Markup',  ok: !!content.schema_desc },
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: '1px solid var(--b1)' }}>
+                  <span style={{ fontSize: 12 }}>{item.l}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: item.ok ? 'var(--green)' : 'var(--red)' }}>{item.ok ? '✓ Good' : '✗ Fix'}</span>
                 </div>
               ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ═══ GEO TAB ═══ */}
-      {tab==='geo'&&(
-        <div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
-            <div className="card">
-              <div style={{fontFamily:'Syne',fontSize:13,fontWeight:800,marginBottom:14}}>📍 Traffic by State</div>
-              {states.length>0?states.slice(0,12).map((s,i)=>{
-                const maxS=Math.max(...states.map(x=>x.sessions),1)
-                return(
-                  <div key={i} style={{marginBottom:9}}>
-                    <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:4}}>
-                      <span style={{fontWeight:600}}>{s.state}</span>
-                      <span style={{fontFamily:'DM Mono',color:'var(--blue)',fontSize:11}}>{s.sessions.toLocaleString()}</span>
-                    </div>
-                    <div style={{height:6,background:'var(--s2)',borderRadius:3,overflow:'hidden'}}>
-                      <div style={{height:'100%',width:Math.round(s.sessions/maxS*100)+'%',background:'var(--blue)',borderRadius:3}}/>
-                    </div>
-                  </div>
-                )
-              }):(
-                <div style={{textAlign:'center',color:'var(--mu)',padding:24,fontSize:12}}>Configure GA4</div>
-              )}
-            </div>
-            <div className="card">
-              <div style={{fontFamily:'Syne',fontSize:13,fontWeight:800,marginBottom:14}}>💰 Sales by State</div>
-              {topSalesStates.length>0?topSalesStates.map(([state,data],i)=>{
-                const maxR=Math.max(...topSalesStates.map(([,d])=>d.revenue),1)
-                return(
-                  <div key={i} style={{marginBottom:9}}>
-                    <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:4}}>
-                      <div><span style={{fontWeight:600}}>{state}</span><span style={{fontSize:10,color:'var(--mu)',marginLeft:5}}>{data.orders} orders</span></div>
-                      <span style={{fontFamily:'DM Mono',color:'var(--green)',fontWeight:700,fontSize:11}}>₹{data.revenue.toLocaleString('en-IN')}</span>
-                    </div>
-                    <div style={{height:6,background:'var(--s2)',borderRadius:3,overflow:'hidden'}}>
-                      <div style={{height:'100%',width:Math.round(data.revenue/maxR*100)+'%',background:'var(--green)',borderRadius:3}}/>
-                    </div>
-                  </div>
-                )
-              }):(
-                <div style={{textAlign:'center',color:'var(--mu)',padding:24,fontSize:12}}>No order location data</div>
-              )}
-            </div>
-          </div>
-          {states.length>0&&(
-            <div className="card" style={{padding:0,overflow:'hidden'}}>
-              <div style={{padding:'12px 16px',borderBottom:'1px solid var(--b1)',fontFamily:'Syne',fontSize:13,fontWeight:800}}>City Breakdown</div>
-              <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse',minWidth:500}}>
-                  <thead><tr>{['State','City','Sessions','Users','Conversions'].map(h=>(
-                    <th key={h} style={{textAlign:'left',padding:'8px 14px',fontSize:10,fontWeight:700,color:'var(--mu)',textTransform:'uppercase',borderBottom:'1px solid var(--b1)'}}>{h}</th>
-                  ))}</tr></thead>
-                  <tbody>{states.map((s,i)=>(
-                    <tr key={i} onMouseOver={e=>e.currentTarget.style.background='rgba(255,255,255,.018)'} onMouseOut={e=>e.currentTarget.style.background=''}>
-                      <td style={{padding:'8px 14px',fontSize:12.5,fontWeight:600}}>{s.state}</td>
-                      <td style={{padding:'8px 14px',fontSize:12,color:'var(--mu)'}}>{s.city}</td>
-                      <td style={{padding:'8px 14px',fontFamily:'DM Mono',fontSize:12,color:'var(--blue)'}}>{s.sessions.toLocaleString()}</td>
-                      <td style={{padding:'8px 14px',fontFamily:'DM Mono',fontSize:12,color:'var(--teal)'}}>{s.users.toLocaleString()}</td>
-                      <td style={{padding:'8px 14px',fontFamily:'DM Mono',fontSize:12,color:'var(--green)',fontWeight:700}}>{s.conversions}</td>
-                    </tr>
-                  ))}</tbody>
-                </table>
+              <div style={{ marginTop: 12, textAlign: 'center' }}>
+                <div style={{ fontFamily: 'Syne', fontSize: 28, fontWeight: 800, color: 'var(--teal)' }}>
+                  {[content.meta_title?.length >= 30 && content.meta_title?.length <= 60, content.meta_desc?.length >= 120, !!content.meta_keywords, !!content.og_title, !!content.schema_desc].filter(Boolean).length * 20}%
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--mu)' }}>SEO Score</div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
-      {/* ═══ PAGES TAB ═══ */}
-      {tab==='pages'&&(
-        <div className="card" style={{padding:0,overflow:'hidden'}}>
-          <div style={{padding:'14px 16px',borderBottom:'1px solid var(--b1)',fontFamily:'Syne',fontSize:13,fontWeight:800}}>Top Pages</div>
-          {pages.length>0?(
-            <div style={{overflowX:'auto'}}>
-              <table style={{width:'100%',borderCollapse:'collapse',minWidth:500}}>
-                <thead><tr>{['Page','Title','Views','Avg Time'].map(h=>(
-                  <th key={h} style={{textAlign:'left',padding:'8px 14px',fontSize:10,fontWeight:700,color:'var(--mu)',textTransform:'uppercase',borderBottom:'1px solid var(--b1)'}}>{h}</th>
-                ))}</tr></thead>
-                <tbody>{pages.map((p,i)=>{
-                  const maxV=Math.max(...pages.map(x=>x.views),1)
-                  return(
-                    <tr key={i} onMouseOver={e=>e.currentTarget.style.background='rgba(255,255,255,.018)'} onMouseOut={e=>e.currentTarget.style.background=''}>
-                      <td style={{padding:'10px 14px'}}>
-                        <div style={{fontSize:12,fontFamily:'DM Mono',color:'var(--blue)',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:200}}>{p.path}</div>
-                        <div style={{height:4,background:'var(--s2)',borderRadius:2,overflow:'hidden',width:100}}>
-                          <div style={{height:'100%',width:Math.round(p.views/maxV*100)+'%',background:'var(--blue)',borderRadius:2}}/>
-                        </div>
-                      </td>
-                      <td style={{padding:'10px 14px',fontSize:12,color:'var(--mu2)',maxWidth:180}}><div style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.title}</div></td>
-                      <td style={{padding:'10px 14px',fontFamily:'DM Mono',fontSize:13,fontWeight:700,color:'var(--purple)'}}>{p.views.toLocaleString()}</td>
-                      <td style={{padding:'10px 14px',fontFamily:'DM Mono',fontSize:12,color:'var(--gold)'}}>{fmt(p.avgTime)}</td>
-                    </tr>
-                  )
-                })}</tbody>
-              </table>
-            </div>
-          ):(
-            <div style={{textAlign:'center',padding:50,color:'var(--mu)'}}>Configure GA4 to see page analytics</div>
-          )}
-        </div>
-      )}
-
-      {/* ═══ CARTS TAB ═══ */}
-      {tab==='carts'&&(
+      {/* ANALYTICS */}
+      {tab === 'analytics' && (
         <div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:10,marginBottom:16}}>
+          <div style={{ background: 'rgba(0,151,167,0.06)', border: '1px solid rgba(0,151,167,0.2)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>📊 Analytics Setup</div>
+            <div style={{ fontSize: 12, color: 'var(--mu2)', lineHeight: 1.7 }}>
+              Real-time analytics ke liye Google Analytics ya Plausible add karo landing page mein.<br />
+              Ya Vercel Analytics use karo — automatically traffic track karta hai.
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 12, marginBottom: 20 }}>
             {[
-              {l:'Active Carts',v:activeCarts.length,c:'var(--green)',sub:'Last 24h'},
-              {l:'Active Value',v:'₹'+activeValue.toLocaleString('en-IN'),c:'var(--teal)',sub:'Potential'},
-              {l:'Abandoned',v:abandonedCarts.length,c:'var(--orange)',sub:'>24h no checkout'},
-              {l:'Lost Revenue',v:'₹'+abandonedValue.toLocaleString('en-IN'),c:'var(--red)',sub:'Abandoned value'},
-              {l:'Abandon Rate',v:carts.length>0?Math.round(abandonedCarts.length/carts.length*100)+'%':'—',c:'var(--orange)',sub:'Rate'},
-            ].map((s,i)=>(
+              { l: 'Total Visits',    v: analytics?.total_visits || '—',    icon: '👁️', color: 'var(--teal)' },
+              { l: 'Today',          v: analytics?.today_visits || '—',    icon: '📅', color: 'var(--blue)' },
+              { l: 'Bounce Rate',    v: analytics?.bounce_rate || '—',     icon: '↩️', color: 'var(--orange)' },
+              { l: 'Avg Load Time',  v: analytics?.load_time || '—',       icon: '⚡', color: 'var(--green)' },
+              { l: 'Conversions',    v: analytics?.conversions || '—',     icon: '🎯', color: 'var(--gold)' },
+              { l: 'Mobile Users',   v: analytics?.mobile_pct || '—',      icon: '📱', color: 'var(--purple)' },
+            ].map((s, i) => (
               <div key={i} className="card">
-                <div style={{fontSize:9.5,fontWeight:700,color:'var(--mu)',textTransform:'uppercase',marginBottom:8}}>{s.l}</div>
-                <div style={{fontFamily:'Syne',fontSize:20,fontWeight:800,color:s.c,marginBottom:3}}>{s.v}</div>
-                <div style={{fontSize:10,color:'var(--mu)'}}>{s.sub}</div>
+                <div style={{ fontSize: 20, marginBottom: 8 }}>{s.icon}</div>
+                <div style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', marginBottom: 6 }}>{s.l}</div>
+                <div style={{ fontFamily: 'Syne', fontSize: 20, fontWeight: 800, color: s.color }}>{s.v}</div>
               </div>
             ))}
           </div>
 
-          {abandonedCarts.length>0&&(
-            <div style={{background:'var(--orL)',border:'1px solid rgba(249,115,22,.3)',borderRadius:12,padding:'12px 16px',marginBottom:14,display:'flex',alignItems:'center',gap:12}}>
-              <span style={{fontSize:20}}>⚠️</span>
-              <div>
-                <div style={{fontSize:13,fontWeight:700,color:'var(--orange)'}}>{abandonedCarts.length} Abandoned Carts — ₹{abandonedValue.toLocaleString('en-IN')} recoverable</div>
-                <div style={{fontSize:11.5,color:'var(--orange)',opacity:.8,marginTop:2}}>Send WhatsApp recovery messages below</div>
-              </div>
+          <div className="card">
+            <div style={{ fontFamily: 'Syne', fontSize: 13, fontWeight: 800, marginBottom: 14 }}>Google Analytics / Plausible Setup</div>
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu2)', textTransform: 'uppercase', marginBottom: 5, display: 'block' }}>Google Analytics ID</label>
+              <input value={content.ga_id || ''} onChange={e => setContent(p => ({ ...p, ga_id: e.target.value }))} placeholder="G-XXXXXXXXXX" style={inp} />
             </div>
-          )}
-
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-            <div className="card">
-              <div style={{fontFamily:'Syne',fontSize:13,fontWeight:800,marginBottom:14,color:'var(--green)'}}>🟢 Active ({activeCarts.length})</div>
-              {activeCarts.length===0?(
-                <div style={{textAlign:'center',color:'var(--mu)',padding:20,fontSize:12}}>No active carts</div>
-              ):activeCarts.slice(0,8).map((c,i)=>{
-                const itemCount=c.items?.length||0
-                return(
-                  <div key={i} style={{background:'var(--s2)',borderRadius:10,padding:'11px 13px',marginBottom:8}}>
-                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-                      <span style={{fontSize:12.5,fontWeight:600}}>{c.name||c.phone||'Guest'}</span>
-                      <span style={{fontFamily:'DM Mono',fontSize:12,fontWeight:700,color:'var(--green)'}}>₹{(c.total||0).toLocaleString('en-IN')}</span>
-                    </div>
-                    <div style={{fontSize:10.5,color:'var(--mu)',marginBottom:4}}>{itemCount} items · {c.phone||'No phone'}</div>
-                    {c.items?.slice(0,2).map((it:any,j:number)=>(
-                      <div key={j} style={{fontSize:10,color:'var(--mu2)'}}>• {it.name} × {it.qty||it.quantity||1}</div>
-                    ))}
-                    {c.phone&&(
-                      <a href={`https://wa.me/${c.phone.replace(/\D/g,'')}?text=${encodeURIComponent('Hi! Maine dekha aapne Rabt Naturals pe products cart mein add kiye hain. Kya main help kar sakti hoon? 🌿')}`} target="_blank" rel="noopener noreferrer" style={{marginTop:7,display:'inline-flex',alignItems:'center',gap:4,fontSize:10.5,padding:'3px 10px',borderRadius:50,background:'var(--grL)',color:'var(--green)',fontWeight:700,textDecoration:'none'}}>
-                        💬 WhatsApp
-                      </a>
-                    )}
-                  </div>
-                )
-              })}
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu2)', textTransform: 'uppercase', marginBottom: 5, display: 'block' }}>Plausible Domain</label>
+              <input value={content.plausible_domain || ''} onChange={e => setContent(p => ({ ...p, plausible_domain: e.target.value }))} placeholder="care.rabtnaturals.com" style={inp} />
             </div>
-
-            <div className="card">
-              <div style={{fontFamily:'Syne',fontSize:13,fontWeight:800,marginBottom:14,color:'var(--orange)'}}>🔴 Abandoned ({abandonedCarts.length})</div>
-              {abandonedCarts.length===0?(
-                <div style={{textAlign:'center',color:'var(--mu)',padding:20,fontSize:12}}>No abandoned carts 🎉</div>
-              ):abandonedCarts.slice(0,8).map((c,i)=>{
-                const hrs=Math.round((Date.now()-new Date(c.updatedAt||c.createdAt||0).getTime())/(1000*3600))
-                return(
-                  <div key={i} style={{background:'var(--rdL)',border:'1px solid rgba(239,68,68,.15)',borderRadius:10,padding:'11px 13px',marginBottom:8}}>
-                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-                      <span style={{fontSize:12.5,fontWeight:600}}>{c.name||c.phone||'Guest'}</span>
-                      <span style={{fontFamily:'DM Mono',fontSize:12,fontWeight:700,color:'var(--red)'}}>₹{(c.total||0).toLocaleString('en-IN')}</span>
-                    </div>
-                    <div style={{fontSize:10.5,color:'var(--mu)',marginBottom:4}}>{hrs}h ago · {c.phone||'No phone'}</div>
-                    {c.items?.slice(0,2).map((it:any,j:number)=>(
-                      <div key={j} style={{fontSize:10,color:'var(--mu2)'}}>• {it.name} × {it.qty||it.quantity||1}</div>
-                    ))}
-                    {c.phone&&(
-                      <a href={`https://wa.me/${c.phone.replace(/\D/g,'')}?text=${encodeURIComponent('Hi! Aapne Rabt Naturals pe kuch items cart mein chhod diye hain. Sirf aapke liye 10% extra discount — code: CART10 🌿 rabtnaturals.com')}`} target="_blank" rel="noopener noreferrer" style={{marginTop:7,display:'inline-flex',alignItems:'center',gap:4,fontSize:10.5,padding:'3px 10px',borderRadius:50,background:'var(--orL)',color:'var(--orange)',fontWeight:700,textDecoration:'none'}}>
-                        💬 Recover WhatsApp
-                      </a>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+            <button onClick={saveContent} style={{ padding: '10px 20px', background: 'linear-gradient(135deg,#0097A7,#005F6A)', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+              💾 Save Analytics Settings
+            </button>
           </div>
+        </div>
+      )}
 
-          {/* Cart tracking setup */}
-          {carts.length===0&&(
-            <div style={{marginTop:16,background:'var(--blL)',border:'1px solid rgba(59,130,246,.2)',borderRadius:12,padding:'16px 18px',fontSize:12.5,color:'var(--blue)',lineHeight:1.8}}>
-              <strong>🔧 Cart Tracking Setup for rabtnaturals.com</strong><br/>
-              Call this whenever cart changes (add/remove item):
-              <div style={{background:'var(--s1)',border:'1px solid var(--b2)',borderRadius:8,padding:'10px 12px',marginTop:8,fontFamily:'DM Mono',fontSize:11,lineHeight:1.8,whiteSpace:'pre-wrap',color:'var(--tx)'}}>
-{`// In your cart context / cart update function:
-const cartId = localStorage.getItem('rabt_cart_id') || Math.random().toString(36).slice(2)
-localStorage.setItem('rabt_cart_id', cartId)
-
-async function syncCart(items, total) {
-  await fetch('https://rabt-api.onrender.com/api/carts', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      cartId,
-      phone: user?.phone || null,
-      name: user?.name || null,
-      items: items.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
-      total,
-      page: '/cart',
-      source: document.referrer || 'direct'
-    })
-  })
-}`}
+      {/* SETTINGS */}
+      {tab === 'settings' && (
+        <div className="card">
+          <div style={{ fontFamily: 'Syne', fontSize: 14, fontWeight: 800, marginBottom: 16 }}>⚙️ General Settings</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {[
+              { key: 'skin_analysis_url', l: 'Skin Analysis URL' },
+              { key: 'products_url',      l: 'Products URL' },
+              { key: 'consultation_url',  l: 'Consultation URL' },
+              { key: 'whatsapp_number',   l: 'WhatsApp Number' },
+              { key: 'instagram_url',     l: 'Instagram URL' },
+              { key: 'ga_id',             l: 'Google Analytics ID' },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu2)', textTransform: 'uppercase', marginBottom: 5, display: 'block' }}>{f.l}</label>
+                <input value={content[f.key] || ''} onChange={e => setContent(p => ({ ...p, [f.key]: e.target.value }))} style={inp} />
               </div>
-              Also call <code style={{background:'rgba(59,130,246,.1)',padding:'1px 5px',borderRadius:3}}>PATCH /api/carts/{'{cartId}'}/convert</code> when order is placed.
-            </div>
-          )}
+            ))}
+          </div>
+          <button onClick={saveContent} style={{ width: '100%', padding: 12, background: 'linear-gradient(135deg,#D4A853,#B87C30)', border: 'none', borderRadius: 10, color: '#08090C', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'Syne', marginTop: 8 }}>
+            💾 Save Settings
+          </button>
         </div>
       )}
     </div>
