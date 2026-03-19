@@ -12,7 +12,7 @@ const { MongoClient, ObjectId } = require('mongodb');
 const cors = require('cors');
 const app = express();
 
-app.use(cors({ origin: '*' }));
+app.use(cors({ origin: ['https://admin.rabtnaturals.com', 'http://localhost:3000'], credentials: true }));
 app.use(express.json());
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://rabtnaturals:Wd1cex7xub@cluster0.toblnpp.mongodb.net/rabt?retryWrites=true&w=majority';
