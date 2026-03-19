@@ -141,6 +141,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       prof = data
     }
     setProfile(prof as UserProfile)
+    ;(window as any).__profile = prof
     if (prof?.role === 'partner' && !pathname.startsWith('/partner')) router.push('/partner')
     if (prof?.role === 'specialist' && pathname === '/') router.push('/specialist-dashboard')
     if (prof?.role === 'specialist_manager' && pathname === '/') router.push('/specialist-dashboard')
@@ -186,7 +187,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         playNotificationSound(notif.type || 'default')
         setNotifications(prev => [notif, ...prev])
         setUnreadCount(prev => prev + 1)
-        toast(notif.title, { icon: notif.type === 'consultation' ? '🌿' : notif.type === 'order' ? '📦' : '🔔' })
+        const userRole = (window as any).__profile?.role || ''
+        if (notif.type === 'consultation' && ['specialist', 'specialist_manager', 'founder', 'manager', 'admin'].includes(userRole)) {
+          toast((t) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ fontWeight: 700, fontSize: 13 }}>🌿 New Consultation!</div>
+              <div style={{ fontSize: 12, color: '#555' }}>{notif.message || 'New consultation request'}</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => { window.location.href = '/specialist-dashboard'; toast.dismiss(t.id) }} style={{ padding: '5px 12px', background: '#0097A7', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>✓ Accept</button>
+                <button onClick={() => { window.location.href = '/consultations'; toast.dismiss(t.id) }} style={{ padding: '5px 10px', background: '#f0f0f0', border: 'none', borderRadius: 6, color: '#333', fontSize: 11, cursor: 'pointer' }}>View</button>
+                <button onClick={() => toast.dismiss(t.id)} style={{ padding: '5px 10px', background: '#fee', border: 'none', borderRadius: 6, color: '#e44', fontSize: 11, cursor: 'pointer' }}>✕</button>
+              </div>
+            </div>
+          ), { duration: 15000, icon: '🌿' })
+        } else {
+          toast(notif.title, { icon: notif.type === 'order' ? '📦' : '🔔', duration: 5000 })
+        }
       }).subscribe()
   }
 
