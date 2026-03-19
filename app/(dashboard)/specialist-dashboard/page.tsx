@@ -71,7 +71,7 @@ export default function SpecialistDashboard() {
         if (notif.user_id !== user?.id) return
         // Play continuous sound for consultation
         if (notif.type === 'consultation') {
-          playConsultationAlert()
+          ;(function playBeep(repeat: number) { if (repeat >= 10) return; try { const AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext; const ctx = new AudioContext(); [784,880,784].forEach((freq,i) => { const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value = freq; osc.type = 'sine'; gain.gain.setValueAtTime(0.4, ctx.currentTime+i*0.1); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.1+0.15); osc.start(ctx.currentTime+i*0.1); osc.stop(ctx.currentTime+i*0.1+0.18); }); setTimeout(() => playBeep(repeat+1), 1000); } catch {} })(0)
         }
       }).subscribe()
 
@@ -80,13 +80,15 @@ export default function SpecialistDashboard() {
       const url = process.env.NEXT_PUBLIC_MONGO_API_URL || localStorage.getItem('rabt_mongo_url')
       if (!url) return
       try {
+        // Call HQ check endpoint
+        await fetch('/api/check-consultations')
         const res = await fetch(url + '/api/consultations')
         if (!res.ok) return
         const all = await res.json()
         const unassigned = Array.isArray(all) ? all.filter((c: any) => c.status === 'pending' && !c.assignedSpecialist) : []
         setUnassignedCons(prev => {
           if (unassigned.length > prev.length) {
-            playConsultationAlert()
+            playNotificationSound()
             toast('🌿 New consultation request!', { duration: 10000 })
           }
           return unassigned

@@ -153,7 +153,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     supabase.channel('notifications')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
         const notif = payload.new as any
-        if (notif.type === 'consultation') playNotificationSound()
+        playNotificationSound(notif.type || 'default')
         setNotifications(prev => [notif, ...prev])
         setUnreadCount(prev => prev + 1)
         toast(notif.title, { icon: notif.type === 'consultation' ? '🌿' : notif.type === 'order' ? '📦' : '🔔' })
