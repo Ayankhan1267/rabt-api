@@ -79,6 +79,7 @@ const NAV: NavSection[] = [
       { id: 'productlab', label: 'Product Lab', icon: '🧪', href: '/productlab' },
       { id: 'goals', label: 'Goals & OKR', icon: '🎯', href: '/goals' },
       { id: 'reports', label: 'Reports', icon: '📋', href: '/reports' },
+      { id: 'team-hub', label: 'Team Hub', icon: '💬', href: '/team-hub', roles: ['founder', 'manager', 'specialist_manager'] },
       { id: 'team', label: 'Team', icon: '🤝', href: '/team' },
     ]
   },
