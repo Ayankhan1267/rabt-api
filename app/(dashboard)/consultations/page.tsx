@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
@@ -86,6 +86,34 @@ export default function ConsultationsPage() {
         body: JSON.stringify({ status })
       })
       toast.success('Status updated!')
+      // Auto-trigger on consultation complete
+      if (status === 'completed' && selected) {
+        try {
+          await fetch('/api/auto-trigger', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              trigger: 'consultation_complete',
+              customer: { name: selected.name || selected.fullName, phone: selected.phone || selected.contactPhone, email: selected.email || '' },
+              data: { specialist: selected.assignedSpecialistName || '' }
+            })
+          })
+        } catch {}
+      }
+      // Reminder trigger on scheduled
+      if (status === 'scheduled' && selected) {
+        try {
+          await fetch('/api/auto-trigger', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              trigger: 'consultation_booked',
+              customer: { name: selected.name || selected.fullName, phone: selected.phone || selected.contactPhone, email: selected.email || '' },
+              data: { date: selected.scheduledDate || '', time: selected.scheduledTime || '', specialist: selected.assignedSpecialistName || '' }
+            })
+          })
+        } catch {}
+      }
       setConsultations(prev => prev.map(c => c._id === consId ? { ...c, status } : c))
       if (selected?._id === consId) setSelected((s: any) => ({ ...s, status }))
     } catch { toast.error('Error') }

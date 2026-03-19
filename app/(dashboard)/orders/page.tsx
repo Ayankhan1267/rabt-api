@@ -166,6 +166,18 @@ export default function OrdersPage() {
         } catch {}
       }
       await supabase.from('hq_orders').insert({ customer_name: form.customer_name, customer_phone: form.customer_phone, customer_email: form.customer_email, product: productNames, amount: totals.total, courier: form.courier, status: form.status, payment_method: form.payment_method, notes: form.notes, mongo_id: mongoId, created_by: user?.id })
+      // Auto-trigger post_purchase WhatsApp
+      try {
+        await fetch('/api/auto-trigger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            trigger: 'post_purchase',
+            customer: { name: form.customer_name, phone: form.customer_phone, email: form.customer_email },
+            data: { orderNumber: mongoId || 'HQ-' + Date.now(), product: productNames }
+          })
+        })
+      } catch {}
       toast.success('Order created!', { id: 'add' })
       setShowAddModal(false); setCart([]); setCouponCode(''); setCouponApplied(null)
       setForm({ customer_name: '', customer_phone: '', customer_email: '', address: '', city: '', state: '', pincode: '', courier: '', status: 'New', payment_method: 'Prepaid', notes: '' })
