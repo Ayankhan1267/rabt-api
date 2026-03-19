@@ -3,10 +3,12 @@ self.addEventListener('push', function(event) {
   const title = data.title || 'Rabt Naturals'
   const options = {
     body: data.body || 'New notification',
-    icon: '/images/logo.png',
-    badge: '/images/logo.png',
-    vibrate: [200, 100, 200, 100, 200],
+    icon: '/favicon.ico',
+    badge: '/favicon.ico',
+    vibrate: [200, 100, 200],
     requireInteraction: data.type === 'consultation',
+    tag: data.type + '-' + Date.now(),
+    renotify: false,
     data: { url: data.url || '/specialist-dashboard', type: data.type },
     actions: data.type === 'consultation' ? [
       { action: 'accept', title: 'Accept' },
