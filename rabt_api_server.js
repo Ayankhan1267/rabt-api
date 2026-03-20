@@ -79,9 +79,10 @@ app.get('/api/orders/:id', async (req, res) => {
 app.post('/api/orders', async (req, res) => {
   try {
     const db = await getDB();
-    const order = { ...req.body, createdAt: new Date(), updatedAt: new Date() };
+    const orderNumber = 'HQ' + Date.now() + Math.floor(Math.random()*1000);
+    const order = { ...req.body, orderNumber, createdAt: new Date(), updatedAt: new Date() };
     const result = await db.collection('orders').insertOne(order);
-    res.json({ success: true, orderId: result.insertedId });
+    res.json({ success: true, orderId: result.insertedId, orderNumber });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
