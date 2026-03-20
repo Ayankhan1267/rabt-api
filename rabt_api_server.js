@@ -76,6 +76,56 @@ app.get('/api/orders/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+
+// SHIPROCKET
+async function getShiprocketToken() {
+  const res = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'anitales786@gmail.com', password: 'uKoc&t1JaQ*hCGira33^ytNW59B%6C^#' })
+  });
+  const data = await res.json();
+  return data.token;
+}
+
+async function createShiprocketOrder(order) {
+  const token = await getShiprocketToken();
+  let phone = (order.shippingAddress?.contactPhone || order.customerPhone || '').replace('+91', '').replace(/\s/g, '');
+  const payload = {
+    order_id: order.orderNumber,
+    order_date: new Date(order.createdAt).toISOString().split('T')[0],
+    billing_customer_name: order.shippingAddress?.contactName || order.customerName || '',
+    billing_last_name: '',
+    billing_address: order.shippingAddress?.street || order.shippingAddress?.addressLine1 || 'NA',
+    billing_city: order.shippingAddress?.city || '',
+    billing_state: order.shippingAddress?.state || '',
+    billing_pincode: order.shippingAddress?.pincode || '',
+    billing_country: 'India',
+    billing_phone: phone,
+    billing_email: order.customerEmail || '',
+    shipping_is_billing: true,
+    order_items: (order.items || []).map(item => ({
+      name: item.productSnapshot?.name || 'Product',
+      sku: item.variant?.sku || 'SKU',
+      units: item.quantity || 1,
+      selling_price: item.price?.final || 0,
+      discount: 0, tax: 0, hsn: 420222
+    })),
+    payment_method: order.payment?.method === 'cod' ? 'COD' : 'Prepaid',
+    shipping_charges: order.pricing?.shippingCharges || 0,
+    giftwrap_charges: 0,
+    transaction_charges: 0,
+    total_discount: order.pricing?.couponDiscount || 0,
+    sub_total: order.pricing?.subtotal || order.pricing?.total || 0,
+    length: 10, breadth: 10, height: 10, weight: 0.3
+  };
+  const res = await fetch('https://apiv2.shiprocket.in/v1/external/orders/create/adhoc', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify(payload)
+  });
+  return await res.json();
+}
 app.post('/api/orders', async (req, res) => {
   try {
     const db = await getDB();
@@ -102,6 +152,17 @@ app.post('/api/orders', async (req, res) => {
       updatedAt: new Date()
     };
     const result = await db.collection('orders').insertOne(order);
+    // Auto Shiprocket
+    try {
+      const srRes = await createShiprocketOrder(order);
+      console.log('Shiprocket:', JSON.stringify(srRes));
+      if (srRes.order_id) {
+        await db.collection('orders').updateOne(
+          { _id: result.insertedId },
+          { $set: { 'trackingDetails.order_id': srRes.order_id, 'trackingDetails.shipment_id': srRes.shipment_id, 'trackingDetails.status': 'NEW' } }
+        );
+      }
+    } catch (srErr) { console.error('Shiprocket error:', srErr.message); }
     res.json({ success: true, orderId: result.insertedId, orderNumber });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
