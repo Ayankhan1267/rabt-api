@@ -273,3 +273,21 @@ app.patch('/api/payouts/:id', async (req, res) => {
 
 app.get('/api/live/ping', (req, res) => res.json({ status: 'ok', time: new Date() }));
 app.get('/api/google-ads', (req, res) => res.json([]));
+// ── PARTNER & ORDER CREATE ROUTES ──
+app.post('/api/orders', async (req, res) => {
+  try {
+    const db = await getDB();
+    const order = { ...req.body, createdAt: new Date(), updatedAt: new Date() };
+    const result = await db.collection('orders').insertOne(order);
+    res.json({ success: true, orderId: result.insertedId });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/partner/orders', async (req, res) => {
+  try {
+    const db = await getDB();
+    const order = { ...req.body, source: 'sales_partner', createdAt: new Date(), updatedAt: new Date() };
+    const result = await db.collection('orders').insertOne(order);
+    res.json({ success: true, orderId: result.insertedId });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
