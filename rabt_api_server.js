@@ -189,7 +189,7 @@ app.get('/api/analytics', async (req, res) => {
 });
 
 
-// ── MISSING ROUTES ──
+
 app.get('/api/payouts', async (req, res) => {
   try {
     const db = await getDB();
@@ -226,3 +226,50 @@ app.get('/api/sessions/recent', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Rabt API running on port ${PORT}`));
+
+// ── MISSING ROUTES ──
+app.get('/api/coupons', async (req, res) => {
+  try {
+    const db = await getDB();
+    const coupons = await db.collection('coupons').find({}).toArray();
+    res.json(coupons);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/partner/orders', async (req, res) => {
+  try {
+    const db = await getDB();
+    const { partnerId } = req.query;
+    const query = partnerId ? { partnerId } : {};
+    const orders = await db.collection('orders').find(query).sort({ createdAt: -1 }).toArray();
+    res.json(orders);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.patch('/api/consultations/:id', async (req, res) => {
+  try {
+    const db = await getDB();
+    const { id } = req.params;
+    await db.collection('consultations').updateOne({ _id: new ObjectId(id) }, { $set: { ...req.body, updatedAt: new Date() } });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/skinprofiles/:id', async (req, res) => {
+  try {
+    const db = await getDB();
+    const profile = await db.collection('skinprofiles').findOne({ _id: new ObjectId(req.params.id) });
+    res.json(profile);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.patch('/api/payouts/:id', async (req, res) => {
+  try {
+    const db = await getDB();
+    await db.collection('payouts').updateOne({ _id: new ObjectId(req.params.id) }, { $set: { ...req.body, updatedAt: new Date() } });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/live/ping', (req, res) => res.json({ status: 'ok', time: new Date() }));
+app.get('/api/google-ads', (req, res) => res.json([]));
