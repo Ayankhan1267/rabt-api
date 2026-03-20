@@ -84,12 +84,20 @@ app.post('/api/orders', async (req, res) => {
     // Map shippingAddress fields to top-level for website admin display
     const contactName = body.shippingAddress?.contactName || body.customerName || '';
     const contactPhone = body.shippingAddress?.contactPhone || body.customerPhone || '';
+    const contactEmail = body.customerEmail || '';
     const order = {
       ...body,
       orderNumber,
       customerName: contactName,
       customerPhone: contactPhone,
-      customerEmail: body.customerEmail || '',
+      customerEmail: contactEmail,
+      // Website admin expects user object with name/email
+      user: {
+        firstName: contactName.split(' ')[0] || contactName,
+        lastName: contactName.split(' ').slice(1).join(' ') || '',
+        email: contactEmail,
+        phoneNumber: contactPhone,
+      },
       createdAt: new Date(),
       updatedAt: new Date()
     };
