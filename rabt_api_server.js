@@ -818,3 +818,18 @@ app.listen(PORT, () => {
   console.log(`📦 Database: ${DB_NAME}`);
   console.log(`✅ All routes ready`);
 });
+
+// Update order by orderNumber (for Shiprocket webhook)
+app.patch('/api/orders/by-order-number/:orderNumber', async (req, res) => {
+  try {
+    const db = await getDB();
+    const { orderNumber } = req.params;
+    const update = {};
+    Object.keys(req.body).forEach(key => { update[key] = req.body[key]; });
+    await db.collection('orders').updateOne(
+      { orderNumber },
+      { $set: { ...update, updatedAt: new Date() } }
+    );
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
