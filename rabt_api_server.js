@@ -80,7 +80,19 @@ app.post('/api/orders', async (req, res) => {
   try {
     const db = await getDB();
     const orderNumber = 'HQ' + Date.now() + Math.floor(Math.random()*1000);
-    const order = { ...req.body, orderNumber, createdAt: new Date(), updatedAt: new Date() };
+    const body = req.body;
+    // Map shippingAddress fields to top-level for website admin display
+    const contactName = body.shippingAddress?.contactName || body.customerName || '';
+    const contactPhone = body.shippingAddress?.contactPhone || body.customerPhone || '';
+    const order = {
+      ...body,
+      orderNumber,
+      customerName: contactName,
+      customerPhone: contactPhone,
+      customerEmail: body.customerEmail || '',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
     const result = await db.collection('orders').insertOne(order);
     res.json({ success: true, orderId: result.insertedId, orderNumber });
   } catch (e) { res.status(500).json({ error: e.message }); }
