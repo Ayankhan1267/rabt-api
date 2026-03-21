@@ -85,7 +85,7 @@ async function getShiprocketToken() {
 
 async function createShiprocketOrder(order) {
   const token = await getShiprocketToken();
-  let phone = (order.shippingAddress?.contactPhone || order.customerPhone || '').replace('+91', '').replace(/\s/g, '');
+  let phone = (order.shippingAddress?.contactPhone || order.customerPhone || '').replace(/^\+91/, '').replace(/\s/g, '').replace(/[^0-9]/g, '').slice(-10);
   const payload = {
     order_id: order.orderNumber,
     order_date: new Date(order.createdAt).toISOString().split('T')[0],
