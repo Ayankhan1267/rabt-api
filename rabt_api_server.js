@@ -142,14 +142,16 @@ app.post('/api/orders', async (req, res) => {
     };
     const result = await db.collection('orders').insertOne(order);
     try {
+      console.log('Creating Shiprocket order for:', order.orderNumber, 'phone:', order.shippingAddress?.contactPhone || order.customerPhone);
       const srRes = await createShiprocketOrder(order);
+      console.log('Shiprocket response:', JSON.stringify(srRes));
       if (srRes.order_id) {
         await db.collection('orders').updateOne(
           { _id: result.insertedId },
           { $set: { 'trackingDetails.order_id': srRes.order_id, 'trackingDetails.shipment_id': srRes.shipment_id, 'trackingDetails.status': 'NEW' } }
         );
       }
-    } catch (srErr) { console.error('Shiprocket error:', srErr.message); }
+    } catch (srErr) { console.error('Shiprocket error:', srErr.message, JSON.stringify(srErr)); }
     res.json({ success: true, orderId: result.insertedId, orderNumber });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -993,3 +995,4 @@ app.listen(PORT, () => {
   console.log(`📦 Database: ${DB_NAME}`);
   console.log(`✅ All routes ready`);
 });
+
