@@ -91,7 +91,7 @@ async function createShiprocketOrder(order) {
     order_date: new Date(order.createdAt).toISOString().split('T')[0],
     billing_customer_name: order.shippingAddress?.contactName || order.customerName || '',
     billing_last_name: '',
-    billing_address: order.shippingAddress?.street || order.shippingAddress?.addressLine1 || 'NA',
+    billing_address: (order.shippingAddress?.street || order.address || 'N/A').padEnd(3, ' '),
     billing_city: order.shippingAddress?.city || '',
     billing_state: order.shippingAddress?.state || '',
     billing_pincode: order.shippingAddress?.pincode || '',
@@ -995,4 +995,5 @@ app.listen(PORT, () => {
   console.log(`📦 Database: ${DB_NAME}`);
   console.log(`✅ All routes ready`);
 });
+
 
