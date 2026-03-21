@@ -1,5 +1,5 @@
-// ============================================
-// Rabt Naturals — MongoDB API Proxy
+﻿// ============================================
+// Rabt Naturals â€” MongoDB API Proxy
 // Updated: All CRUD routes added
 // ============================================
 
@@ -11,12 +11,12 @@ const app = express();
 app.use(cors({ origin: ['https://admin.rabtnaturals.com', 'https://rabtnaturals.com', 'http://localhost:3000'], credentials: true }));
 app.use(express.json());
 
-// ✅ SECURE: Only from environment variable
+// âœ… SECURE: Only from environment variable
 const MONGO_URI = process.env.MONGO_URI;
 const DB_NAME = 'rabt';
 
 if (!MONGO_URI) {
-  console.error('❌ MONGO_URI environment variable not set!');
+  console.error('âŒ MONGO_URI environment variable not set!');
   process.exit(1);
 }
 
@@ -30,9 +30,9 @@ async function getDB() {
   return client.db(DB_NAME);
 }
 
-// ── Health check ──
+// â”€â”€ Health check â”€â”€
 app.get('/', (req, res) => {
-  res.json({ status: 'Rabt API Live ✅', db: DB_NAME, time: new Date() });
+  res.json({ status: 'Rabt API Live âœ…', db: DB_NAME, time: new Date() });
 });
 
 app.get('/api/live/ping', (req, res) => res.json({ status: 'ok', time: new Date() }));
@@ -809,14 +809,63 @@ app.get('/api/analytics', async (req, res) => {
 app.get('/api/google-ads', (req, res) => res.json([]));
 
 
+
+// ============================================
+// CREATE SESSION (HQ se video call start)
+// ============================================
+app.post('/api/create-session', async (req, res) => {
+  try {
+    const db = await getDB();
+    const { consultationId, specialistId } = req.body;
+    if (!consultationId || !specialistId) return res.status(400).json({ error: 'consultationId and specialistId required' });
+
+    // Check existing session
+    const existing = await db.collection('sessions').findOne({ consultation: new ObjectId(consultationId) });
+    if (existing) return res.json({ success: true, sessionUrl: existing.sessionUrl, session: existing });
+
+    // Get consultation
+    const consultation = await db.collection('consultations').findOne({ _id: new ObjectId(consultationId) });
+    if (!consultation) return res.status(404).json({ error: 'Consultation not found' });
+
+    // Update consultation status
+    await db.collection('consultations').updateOne(
+      { _id: new ObjectId(consultationId) },
+      { $set: { status: 'accepted', assignedSpecialist: new ObjectId(specialistId), acceptedAt: new Date(), updatedAt: new Date() } }
+    );
+
+    // Create session token
+    const crypto = require('crypto');
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    const sessionUrl = 'https://rabtnaturals.com/video-session/' + consultation.user + '/' + sessionToken;
+
+    const result = await db.collection('sessions').insertOne({
+      consultation: new ObjectId(consultationId),
+      user: consultation.user,
+      specialist: new ObjectId(specialistId),
+      sessionToken,
+      sessionUrl,
+      scheduledStartTime: new Date(consultation.scheduledDate),
+      status: 'scheduled',
+      sessionAmount: 0,
+      specialistEarning: 0,
+      platformFee: 0,
+      paymentReceived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    res.json({ success: true, sessionUrl, sessionId: result.insertedId });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ============================================
 // START SERVER
 // ============================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Rabt API running on port ${PORT}`);
-  console.log(`📦 Database: ${DB_NAME}`);
-  console.log(`✅ All routes ready`);
+  console.log(`ðŸš€ Rabt API running on port ${PORT}`);
+  console.log(`ðŸ“¦ Database: ${DB_NAME}`);
+  console.log(`âœ… All routes ready`);
 });
 
 // Update order by orderNumber (for Shiprocket webhook)
@@ -831,5 +880,176 @@ app.patch('/api/orders/by-order-number/:orderNumber', async (req, res) => {
       { $set: { ...update, updatedAt: new Date() } }
     );
     res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+// ============================================
+// GA4 ANALYTICS ROUTES
+// ============================================
+const { BetaAnalyticsDataClient } = require('@google-analytics/data');
+
+function getGA4Client() {
+  const creds = process.env.GA_SERVICE_ACCOUNT_JSON;
+  if (!creds) return null;
+  try {
+    return new BetaAnalyticsDataClient({ credentials: JSON.parse(creds) });
+  } catch { return null; }
+}
+
+const GA_PROPERTY = process.env.GA_PROPERTY_ID;
+
+// Helper to run GA4 report
+async function runReport(client, params) {
+  const [res] = await client.runReport({ property: `properties/${GA_PROPERTY}`, ...params });
+  return res;
+}
+
+// Overview: sessions, users, bounce rate, avg session duration
+app.get('/api/ga/overview', async (req, res) => {
+  const { startDate = '30daysAgo', endDate = 'today' } = req.query;
+  const client = getGA4Client();
+  if (!client || !GA_PROPERTY) return res.json({
+    sessions: '—', users: '—', bounceRate: '—', avgDuration: '—',
+    pageviews: '—', newUsers: '—', note: 'GA4 not configured'
+  });
+  try {
+    const report = await runReport(client, {
+      dateRanges: [{ startDate, endDate }],
+      metrics: [
+        { name: 'sessions' }, { name: 'totalUsers' }, { name: 'bounceRate' },
+        { name: 'averageSessionDuration' }, { name: 'screenPageViews' }, { name: 'newUsers' }
+      ]
+    });
+    const row = report.rows?.[0]?.metricValues || [];
+    const fmt = (i) => row[i]?.value || '0';
+    const dur = parseFloat(fmt(3));
+    const mins = Math.floor(dur / 60);
+    const secs = Math.round(dur % 60);
+    res.json({
+      sessions: parseInt(fmt(0)).toLocaleString('en-IN'),
+      users: parseInt(fmt(1)).toLocaleString('en-IN'),
+      bounceRate: (parseFloat(fmt(2)) * 100).toFixed(1) + '%',
+      avgDuration: `${mins}m ${secs}s`,
+      pageviews: parseInt(fmt(4)).toLocaleString('en-IN'),
+      newUsers: parseInt(fmt(5)).toLocaleString('en-IN'),
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Traffic sources
+app.get('/api/ga/sources', async (req, res) => {
+  const { startDate = '30daysAgo', endDate = 'today' } = req.query;
+  const client = getGA4Client();
+  if (!client || !GA_PROPERTY) return res.json([]);
+  try {
+    const report = await runReport(client, {
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+      metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 8
+    });
+    const rows = report.rows?.map(r => ({
+      source: r.dimensionValues[0].value,
+      sessions: parseInt(r.metricValues[0].value),
+      users: parseInt(r.metricValues[1].value),
+    })) || [];
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Top pages
+app.get('/api/ga/pages', async (req, res) => {
+  const { startDate = '30daysAgo', endDate = 'today' } = req.query;
+  const client = getGA4Client();
+  if (!client || !GA_PROPERTY) return res.json([]);
+  try {
+    const report = await runReport(client, {
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
+      metrics: [{ name: 'screenPageViews' }, { name: 'totalUsers' }, { name: 'bounceRate' }],
+      orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+      limit: 10
+    });
+    const rows = report.rows?.map(r => ({
+      path: r.dimensionValues[0].value,
+      title: r.dimensionValues[1].value,
+      views: parseInt(r.metricValues[0].value),
+      users: parseInt(r.metricValues[1].value),
+      bounceRate: (parseFloat(r.metricValues[2].value) * 100).toFixed(1) + '%',
+    })) || [];
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Top Indian states
+app.get('/api/ga/states', async (req, res) => {
+  const { startDate = '30daysAgo', endDate = 'today' } = req.query;
+  const client = getGA4Client();
+  if (!client || !GA_PROPERTY) return res.json([]);
+  try {
+    const report = await runReport(client, {
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'region' }],
+      metrics: [{ name: 'totalUsers' }, { name: 'sessions' }],
+      dimensionFilter: {
+        filter: { fieldName: 'country', stringFilter: { value: 'India' } }
+      },
+      orderBys: [{ metric: { metricName: 'totalUsers' }, desc: true }],
+      limit: 10
+    });
+    const rows = report.rows?.map(r => ({
+      state: r.dimensionValues[0].value,
+      users: parseInt(r.metricValues[0].value),
+      sessions: parseInt(r.metricValues[1].value),
+    })) || [];
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Daily traffic (last 30 days)
+app.get('/api/ga/daily', async (req, res) => {
+  const { startDate = '30daysAgo', endDate = 'today' } = req.query;
+  const client = getGA4Client();
+  if (!client || !GA_PROPERTY) return res.json([]);
+  try {
+    const report = await runReport(client, {
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'date' }],
+      metrics: [{ name: 'sessions' }, { name: 'totalUsers' }, { name: 'screenPageViews' }],
+      orderBys: [{ dimension: { dimensionName: 'date' } }],
+    });
+    const rows = report.rows?.map(r => ({
+      date: r.dimensionValues[0].value,
+      sessions: parseInt(r.metricValues[0].value),
+      users: parseInt(r.metricValues[1].value),
+      pageviews: parseInt(r.metricValues[2].value),
+    })) || [];
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Live visitors (from our own tracking)
+app.get('/api/live/visitors', async (req, res) => {
+  try {
+    const db = await getDB();
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const visitors = await db.collection('live_visitors').find({
+      lastSeen: { $gte: fiveMinAgo }
+    }).toArray();
+    res.json({ count: visitors.length, visitors });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Tracking stats
+app.get('/api/tracking/stats', async (req, res) => {
+  try {
+    const db = await getDB();
+    const today = new Date(); today.setHours(0,0,0,0);
+    const [totalVisits, todayVisits, events] = await Promise.all([
+      db.collection('live_visitors').countDocuments(),
+      db.collection('live_visitors').countDocuments({ lastSeen: { $gte: today } }),
+      db.collection('tracking_events').countDocuments({ createdAt: { $gte: today } }),
+    ]);
+    res.json({ totalVisits, todayVisits, events });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
