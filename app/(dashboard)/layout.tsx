@@ -108,7 +108,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     loadProfile()
-    setupRealtime()
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
@@ -148,6 +147,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (prof?.role === 'ops' && pathname === '/') router.push('/orders')
     if (prof?.role === 'support' && pathname === '/') router.push('/crm')
     loadNotifications(user.id)
+    setupRealtime(user.id)
     registerPushNotifications()
   }
 
@@ -180,9 +180,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setUnreadCount((data || []).filter((n: any) => !n.is_read).length)
   }
 
-  function setupRealtime() {
+  function setupRealtime(userId: string) {
     supabase.channel('notifications')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, (payload) => {
         const notif = payload.new as any
         playNotificationSound(notif.type || 'default')
         setNotifications(prev => [notif, ...prev])

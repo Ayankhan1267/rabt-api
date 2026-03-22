@@ -6,6 +6,7 @@
 const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
 const cors = require('cors');
+const crypto = require('crypto');
 const app = express();
 
 app.use(cors({ origin: ['https://admin.rabtnaturals.com', 'https://rabtnaturals.com', 'http://localhost:3000', 'http://localhost:3002'], credentials: true }));
@@ -77,7 +78,7 @@ async function getShiprocketToken() {
   const res = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'anitales786@gmail.com', password: 'uKoc&t1JaQ*hCGira33^ytNW59B%6C^#' })
+    body: JSON.stringify({ email: process.env.SHIPROCKET_EMAIL, password: process.env.SHIPROCKET_PASSWORD })
   });
   const data = await res.json();
   return data.token;
@@ -829,7 +830,6 @@ app.post('/api/create-session', async (req, res) => {
       { _id: new ObjectId(consultationId) },
       { $set: { status: 'accepted', assignedSpecialist: new ObjectId(specialistId), acceptedAt: new Date(), updatedAt: new Date() } }
     );
-    const crypto = require('crypto');
     const sessionToken = crypto.randomBytes(32).toString('hex');
     const sessionUrl = 'https://rabtnaturals.com/video-session/' + consultation.user + '/' + sessionToken;
     const result = await db.collection('sessions').insertOne({

@@ -41,18 +41,20 @@ export default function DashboardPage() {
   async function loadDashboard() {
     setLoading(true)
     try {
-      const [sbOrders, sbLeads, sbTasks, sbExpenses, sbGoals] = await Promise.all([
+      const [sbOrders, sbLeads, sbTasks, sbExpenses, sbGoals, sbConsultations] = await Promise.all([
         supabase.from('hq_orders').select('*').order('created_at', { ascending: false }),
         supabase.from('leads').select('*').order('created_at', { ascending: false }),
         supabase.from('tasks').select('*'),
         supabase.from('expenses').select('*').gte('date', new Date(new Date().setDate(1)).toISOString().split('T')[0]),
         supabase.from('goals').select('*').eq('status', 'active'),
+        supabase.from('consultations').select('id, status'),
       ])
 
       const orders = sbOrders.data || []
       const leads = sbLeads.data || []
       const tasks = sbTasks.data || []
       const expenses = sbExpenses.data || []
+      const consultations = sbConsultations.data || []
 
       // Try MongoDB
       let mongoOrders: any[] = []
@@ -155,7 +157,7 @@ export default function DashboardPage() {
         totalCustomers: mongoCustomers || leads.length,
         totalLeads: leads.length,
         openTasks: tasks.filter(t => t.status !== 'done').length,
-        pendingConsultations: 0,
+        pendingConsultations: consultations.filter(c => ['pending', 'scheduled'].includes(c.status)).length,
         ordersByStatus,
         revenueChart,
         topProducts,
